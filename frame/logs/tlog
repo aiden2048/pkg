@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+
+# example: tlog.sh -t 121913 "$keyword"
+if [[ "$1" == "" ]]; then
+    echo "usage: tlog.sh <options> <keyword>"
+    exit 1
+fi
+
+D=
+args=("$@")
+args_filter=()
+LOG=
+
+for ((i=0; i<${#args[@]}; i++)); do
+    if [[ "${args[$i]}" == "-t" ]]; then
+        n=$(( $i + 1 ))
+        D="${args[$n]}"
+        i=$(( $i + 1 ))
+    else
+        args_filter[${#args_filter[@]}]="${args[$i]}"
+    fi
+done
+
+if [[ "$D" == "" ]]; then
+    D="0"
+fi
+
+if [ $D -eq "0" ];then
+    LOG=`date "+%Y%m%d%H"`"*.txt"
+elif [ ${#D} -eq 1 ];then
+    LOG=`date "+%Y%m%d0"`$D"*.txt"
+elif [ ${#D} -eq 2 ]; then
+    LOG=`date "+%Y%m%d"`$D"*.txt"
+elif [ ${#D} -eq 3 ]; then
+    LOG=`date "+%Y%m0"`$D"*.txt"
+elif [ ${#D} -eq 4 ]; then
+    LOG=`date "+%Y%m"`$D"*.txt"
+elif [ ${#D} -eq 5 ]; then
+    LOG=`date "+%Y0"`$D"*.txt"
+elif [ ${#D} -eq 6 ]; then
+    LOG=`date "+%Y"`$D"*.txt"
+fi
+
+if [[ "$TLOGDIR" == "" ]]; then
+    TLOGDIR="/data/logs"
+fi
+
+LOG=$TLOGDIR"/*/*/*."$LOG
+LOG=${LOG//\\/\/}
+ZLOG=$LOG".zip"
+NLOG=`ls $LOG|wc -l`
+NZLOG=`ls $ZLOG|wc -l`
+if [ $NLOG -eq 0 ]; then
+    if [ $NZLOG -eq 0 ]; then
+        echo
+        echo "files $LOG|$ZLOG not existed, stop"
+        echo
+        exit 1
+    fi
+fi
+
+TMP=`mktemp /tmp/tlog.XXXXXXXXXXXXXXX`
+if [ $NLOG -ne 0 ]; then
+   grep -h -a "${args_filter[@]}" $LOG>>$TMP
+fi
+if [ $NZLOG -ne 0 ]; then
+    ls $ZLOG|xargs -n 1 unzip -c|grep -a "${args_filter[@]}">>$TMP
+fi
+cat $TMP | sort -k1
+echo -e "cache result in \033[92m"$TMP"\033[0m"

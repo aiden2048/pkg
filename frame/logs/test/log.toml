@@ -1,0 +1,10 @@
+[File]
+MaxFileSizeBytes=4000
+DefaultLogDir="/private/var/work/gitlabproj/afun-golang-oversea/dist.dev/logs/v2/log"
+BillLogDir="/private/var/work/gitlabproj/afun-golang-oversea/dist.dev/logs/v2/bill"
+StatLogDir="/private/var/work/gitlabproj/afun-golang-oversea/dist.dev/logs/v2/stat"
+Level="DBG"
+LogDebugBeforeFileSizeBytes=1000000
+LogInfoBeforeFileSizeBytes=1000000
+DebugMsgMaxLen=5
+FileMaxRemainDays=1

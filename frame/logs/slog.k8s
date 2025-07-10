@@ -1,0 +1,126 @@
+#!/usr/bin/env bash
+
+# example: slog.sh -t 121913 "$keyword"
+if [[ "$1" == "" ]]; then
+    echo "usage: slog -g \$group<如:-g h01> [-s \$server, 支持多个,如:-s appserver,vip] [-d \$dir, 如:-d bills] [-t \$YMDH|MDH|DH|H 如:-t 13] \$keyword"
+    echo "example: slog.sh -g h01 -t 13 MPWXWHyspBdvfuqTkUgA"
+    exit 1
+fi
+
+D=-1
+G=
+S=
+DIR=
+args=("$@")
+args_filter=()
+LOG=
+BKLOGSUBDIR=
+LOGS=
+ZLOGS=
+LOGARR=
+ZLOGARR=
+
+for ((i=0; i<${#args[@]}; i++)); do
+    if [[ "${args[$i]}" == "-t" ]]; then
+        n=$(( $i + 1 ))
+        D="${args[$n]}"
+        i=$(( $i + 1 ))
+    elif [[ "${args[$i]}" == "-g" ]]; then
+        n=$(( $i + 1 ))
+        G="${args[$n]}"
+        i=$(( $i + 1 ))
+    elif [[ "${args[$i]}" == "-s" ]]; then
+        n=$(( $i + 1 ))
+        S="${args[$n]}"
+        i=$(( $i + 1 ))
+    elif [[ "${args[$i]}" == "-d" ]]; then
+        n=$(( $i + 1 ))
+        DIR="${args[$n]}"
+        i=$(( $i + 1 ))
+    else
+        args_filter[${#args_filter[@]}]="${args[$i]}"
+    fi
+done
+
+if [[ "$G" == "" ]]; then
+  echo "请通过-g指定查询机器组"
+  exit 1
+fi
+
+if [[ "$D" == "" ]]; then
+    D="0"
+fi
+
+DSTR=
+if [ $D -eq "-1" ];then
+    DSTR=`date "+%Y%m%d%H"`
+elif [ ${#D} -eq 1 ];then
+    DSTR=`date "+%Y%m%d0"`$D
+elif [ ${#D} -eq 2 ]; then
+    DSTR=`date "+%Y%m%d"`$D
+elif [ ${#D} -eq 3 ]; then
+    DSTR=`date "+%Y%m0"`$D
+elif [ ${#D} -eq 4 ]; then
+    DSTR=`date "+%Y%m"`$D
+elif [ ${#D} -eq 5 ]; then
+    DSTR=`date "+%Y0"`$D
+elif [ ${#D} -eq 6 ]; then
+    DSTR=`date "+%Y"`$D
+fi
+
+LOG=$DSTR"*.txt"
+BKLOGSUBDIR=${DSTR:0:8}
+
+if [[ "$TLOGDIR" == "" ]]; then
+    TLOGDIR="/data/logs"
+fi
+TLOGDIR=$TLOGDIR"/"$G
+
+if [[ "$BKLOGDIR" == "" ]]; then
+    BKLOGDIR="/hdd"
+fi
+BKLOGDIR=$BKLOGDIR"/"$G
+
+if [[ "$S" == "" ]] && [[ "$DIR" == "" ]]; then
+  LOGS=$BKLOGDIR"/*/*/$BKLOGSUBDIR/*."$LOG,$TLOGDIR"/*/*/*."$LOG
+elif [[ "$S" == "" ]] && [[ $DIR ]]; then
+  LOGS=$BKLOGDIR"/*/$DIR/$BKLOGSUBDIR/*."$LOG,$TLOGDIR"/*/$DIR/*."$LOG
+elif [[ $S ]] && [[ $DIR ]]; then
+  SS=($(echo "$S" | tr "," " "))
+  for SP in "${SS[@]}"; do
+      LOGS=$BKLOGDIR"/$SP/$DIR/$BKLOGSUBDIR/*."$LOG,$TLOGDIR"/$SP/$DIR/*."$LOG,$LOGS
+  done
+elif [[ $S ]] && [[ "$DIR" == "" ]]; then
+  SS=($(echo "$S" | tr "," " "))
+  for SP in "${SS[@]}"; do
+      LOGS=$BKLOGDIR"/$SP/*/$BKLOGSUBDIR/*."$LOG,$TLOGDIR"/$SP/*/*."$LOG,$LOGS
+  done
+fi
+
+TMP=`mktemp /tmp/slog.XXXXXXXXXXXXXXX`
+
+LOGARR=($(echo "$LOGS" | tr "," " "))
+
+for LOGP in "${LOGARR[@]}"; do
+    NLOG=`ls $LOGP|wc -l`
+    if [ $NLOG -ne 0 ]; then
+        LOGP=${LOGP//\\/\/}
+        fgrep -h -a "${args_filter[@]}" $LOGP>>$TMP
+    fi
+done
+
+for LOGP in "${LOGARR[@]}"; do
+    ZLOGS=$LOGP".zip",$ZLOGS
+done
+
+ZLOGARR=($(echo "$ZLOGS" | tr "," " "))
+for ZLOGP in "${ZLOGARR[@]}"; do
+    NZLOG=`ls $ZLOGP|wc -l`
+    if [ $NZLOG -ne 0 ]; then
+      ZLOGP=${ZLOGP//\\/\/}
+      ls $ZLOGP|xargs -n 1 unzip -c|fgrep -a "${args_filter[@]}">>$TMP
+    fi
+done
+
+cat $TMP | sort -k1
+echo -e "cache result in \033[92m"$TMP"\033[0m"
