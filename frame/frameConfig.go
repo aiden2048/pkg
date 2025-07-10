@@ -145,7 +145,7 @@ func InitConfig(svrName string, opt ...*FrameOption) error {
 
 			//GameNames 几个进程固定ID
 			nPlatformId := int64(_global_config.PlatformID) * 100000
-			if utils.StrInArray(GetServerName(), GameNames) {
+			if utils.InArray(GameNames, GetServerName()) {
 				//nPlatformId := int64(_global_config.PlatformID) * 10000
 				server_config.ServerID = int32(nPlatformId)
 			} else {
