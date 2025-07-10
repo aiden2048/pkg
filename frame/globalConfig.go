@@ -101,11 +101,11 @@ func LoadGlobalConfig() error {
 	_, err := toml.DecodeFile(filename, newConf)
 	if err != nil {
 		if !os.IsNotExist(err) {
-			logs.LogError("DecodeFile:%s failed:%s", fkey, err.Error())
+			logs.Errorf("DecodeFile:%s failed:%s", fkey, err.Error())
 		}
 		if err := LoadConfigFromMongo(fkey, newConf); err != nil {
 			log.Printf("LoadConfigFromMongo[%s]: %+v", fkey, err)
-			logs.LogError("LoadConfigFromMongo[%s]: %+v", fkey, err)
+			logs.Errorf("LoadConfigFromMongo[%s]: %+v", fkey, err)
 			return err
 		}
 	}

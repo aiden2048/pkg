@@ -109,7 +109,7 @@ var flagClose = false
 func CloseServer() {
 	closeLock.Lock()
 	if !flagClose {
-		logs.Trace("CloseServer")
+		logs.Infof("CloseServer")
 		log.Println("CloseServer")
 		close(G_CloseChan)
 		flagClose = true
@@ -137,33 +137,33 @@ func printMemStats() {
 	var mem runtime.MemStats
 	runtime.ReadMemStats(&mem)
 
-	logs.Trace("PrintMemStats ===================Begin================")
-	logs.Trace("mem.Alloc: %d, %d Mb", mem.Alloc, mem.Alloc/1024/1024)
-	logs.Trace("mem.TotalAlloc: %d, %d Mb", mem.TotalAlloc, mem.TotalAlloc/1024/1024)
-	logs.Trace("mem.HeapAlloc: %d, %d Mb", mem.HeapAlloc, mem.HeapAlloc/1024/1024)
-	logs.Trace("mem.HeapSys: %d, %d Mb", mem.HeapSys, mem.HeapSys/1024/1024)
+	logs.Infof("PrintMemStats ===================Begin================")
+	logs.Infof("mem.Alloc: %d, %d Mb", mem.Alloc, mem.Alloc/1024/1024)
+	logs.Infof("mem.TotalAlloc: %d, %d Mb", mem.TotalAlloc, mem.TotalAlloc/1024/1024)
+	logs.Infof("mem.HeapAlloc: %d, %d Mb", mem.HeapAlloc, mem.HeapAlloc/1024/1024)
+	logs.Infof("mem.HeapSys: %d, %d Mb", mem.HeapSys, mem.HeapSys/1024/1024)
 
-	logs.Trace("MemStats: %+v", &mem)
-	logs.Trace("PrintMemStats ===================End================")
+	logs.Infof("MemStats: %+v", &mem)
+	logs.Infof("PrintMemStats ===================End================")
 }
 
 func ProfileToFile(file string, profileTime int) {
-	logs.Trace("Start CPUProfile")
+	logs.Infof("Start CPUProfile")
 	if err := baselib.ProfileToFile(file+"_cpu", profileTime); err != nil {
-		logs.Trace("Create file %s failed, error: %+v", file+"_cpu", err)
+		logs.Infof("Create file %s failed, error: %+v", file+"_cpu", err)
 	}
-	logs.Trace("Finish CPUProfile")
-	logs.Trace("Start Memory Profile")
+	logs.Infof("Finish CPUProfile")
+	logs.Infof("Start Memory Profile")
 	if err := baselib.ProfileHeapMemoryToFile(file + "_memory"); err != nil {
-		logs.Trace("Create file %s failed, error: %+v", file+"_memory", err)
+		logs.Infof("Create file %s failed, error: %+v", file+"_memory", err)
 	}
-	logs.Trace("Finish Memory Profile")
+	logs.Infof("Finish Memory Profile")
 }
 
 func Defer(f func()) {
 
 	g_deferFuncs = append(g_deferFuncs, f)
-	logs.Trace("append Defer %+v", g_deferFuncs)
+	logs.Infof("append Defer %+v", g_deferFuncs)
 }
 
 func ForceStartNatsService() {
@@ -194,23 +194,23 @@ func Run(appInit func() error) {
 	ListenConfig("allgoserver", baselib.ReloadServerConfig)
 	//stopKey := fmt.Sprintf("stop_server_%s_%d", GetServerName(), GetServerID())
 	ListenConfig("stop_server", onStopServer)
-	logs.Trace(">>>>>>>>>>>>>>> start  ================")
+	logs.Infof(">>>>>>>>>>>>>>> start  ================")
 	runinfo := fmt.Sprintf("%d %s %d %s ... start\n", os.Getpid(),
 		GetServerName(), GetServerID(), time.Now().Format(utils.TimeFormat_Full))
 	//fmt.Printf("================Start Server %s as id %d================\n", GetServerName(), GetServerID())
 	err := ioutil.WriteFile("run.id", []byte(runinfo), 0666)
-	logs.Trace(">>>>>>>>>>>>>>> Start Server %s as id %d  ,err:%+v================\n", GetServerName(), GetServerID(), err)
+	logs.Infof(">>>>>>>>>>>>>>> Start Server %s as id %d  ,err:%+v================\n", GetServerName(), GetServerID(), err)
 	go func() {
 		var startTime time.Time
 		startTime = time.Now()
-		logs.Trace(">>>>>>>>>>>>>>> Start Run %s-%d at %s ================", GetServerName(), GetServerID(), startTime.Format(baselib.TimeFormatMilli))
+		logs.Infof(">>>>>>>>>>>>>>> Start Run %s-%d at %s ================", GetServerName(), GetServerID(), startTime.Format(baselib.TimeFormatMilli))
 
 		//应用初始化接口
 		if appInit != nil {
 			err := appInit()
 			if err != nil {
 				fmt.Println("start appInit failed: ", err.Error())
-				logs.LogError("start appInit failed: %+v", err.Error())
+				logs.Errorf("start appInit failed: %+v", err.Error())
 				log.Fatalf("start appInit failed: %+v", err.Error())
 				return
 			}
@@ -303,7 +303,7 @@ func stop() {
 	// 然后处理剩下的请求之后，停止Service的协程
 	//StopService()
 	log.Printf("Server %s-%d stop!!!\n", GetServerName(), GetServerID())
-	logs.Trace("Server %s-%d stop!!!", GetServerName(), GetServerID())
+	logs.Infof("Server %s-%d stop!!!", GetServerName(), GetServerID())
 	// 最后Flush日志缓存
 	logs.CloseAllLogAdapter() // 注册清理操作，将并发管道中还没有打印的日志全部打印完才退出
 	log.Printf("CloseAllLogAdapter\n")
@@ -314,7 +314,7 @@ func stop() {
 	//ioutil.WriteFile("run.id", []byte(runinfo), os.ModeAppend)
 
 	now := time.Now()
-	logs.Trace(">>>>>>>>>>>>>>> Succ Stop %s-%d at %s,cost: %d ms ================",
+	logs.Infof(">>>>>>>>>>>>>>> Succ Stop %s-%d at %s,cost: %d ms ================",
 		GetServerName(), GetServerID(), now.Format(baselib.TimeFormatMilli), now.Sub(startTime)/time.Millisecond)
 	log.Printf(">>>>>>>>>>>>>>> Succ Stop %s-%d at %s,cost: %d ms ================\n",
 		GetServerName(), GetServerID(), now.Format(baselib.TimeFormatMilli), now.Sub(startTime)/time.Millisecond)
@@ -328,7 +328,7 @@ func Stop() {
 func ManualStop() {
 	// 必须按顺序来，先将nats的订阅全部取消, 使得新请求不会再过来
 
-	logs.Trace("Begin ManualStop ... ")
+	logs.Infof("Begin ManualStop ... ")
 	log.Println("Begin ManualStop ... ")
 	UnloadAllSubject()
 	//stopRpcxServer()
@@ -336,5 +336,5 @@ func ManualStop() {
 	//CloseServer()
 	stopRegistryPlugin()
 	log.Println("End ManualStop")
-	logs.Trace("End ManualStop")
+	logs.Infof("End ManualStop")
 }

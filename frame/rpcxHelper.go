@@ -528,13 +528,13 @@ func CallRpcxForTrans(platId int32, sess *Session, sname, fname string, svrid in
 	rsp := &NatsTransMsg{}
 	rspBuf, errs := rpcxCall(sess.GetUid(), platId, sname, fname, svrid, req, timeout, true)
 	if errs != nil {
-		// logs.LogError("CallRpcxForTrans plat:%d, %s.%s.%d, Sess:%+v failed:%s", platId, sname, fname, svrid, sess, err.Error())
+		// logs.Errorf("CallRpcxForTrans plat:%d, %s.%s.%d, Sess:%+v failed:%s", platId, sname, fname, svrid, sess, err.Error())
 		return rsp, errs
 	}
 	err := jsoniter.Unmarshal(rspBuf.Data, rsp)
 	if err != nil {
 		errs = errorMsg.RspError.Copy(err)
-		logs.LogError("CallRpcxForTrans  plat:%d,%s.%s.%d Unmarshal rsp (%+v),rsp(%+v) failed:%s", platId, sname, fname, svrid, string(rspBuf.Data), string(rspBuf.Data), err.Error())
+		logs.Errorf("CallRpcxForTrans  plat:%d,%s.%s.%d Unmarshal rsp (%+v),rsp(%+v) failed:%s", platId, sname, fname, svrid, string(rspBuf.Data), string(rspBuf.Data), err.Error())
 	}
 	return rsp, errs
 }
@@ -543,13 +543,13 @@ func CallRpcx(platId int32, sname, fname string, svrid int32, req interface{}, t
 	rsp := &NatsMsg{}
 	rspBuf, errs := rpcxCall(0, platId, sname, fname, svrid, req, timeout, true)
 	if errs != nil {
-		//logs.LogError("CallRpcx  plat:%d,%s.%s.%d  failed:%s", platId, sname, fname, svrid, err.Error())
+		//logs.Errorf("CallRpcx  plat:%d,%s.%s.%d  failed:%s", platId, sname, fname, svrid, err.Error())
 		return rsp, errs
 	}
 	err := jsoniter.Unmarshal(rspBuf.Data, rsp)
 	if err != nil {
 		errs = errorMsg.RspError.Copy(err)
-		logs.LogError("CallRpcx  plat:%d,%s.%s.%d Unmarshal rsp (%+v) failed:%s", platId, sname, fname, svrid, string(rspBuf.Data), err.Error())
+		logs.Errorf("CallRpcx  plat:%d,%s.%s.%d Unmarshal rsp (%+v) failed:%s", platId, sname, fname, svrid, string(rspBuf.Data), err.Error())
 	}
 	return rsp, errs
 }
@@ -559,13 +559,13 @@ func SendRpcx(uid uint64, platId int32, sname, fname string, svrid int32, req in
 	if svrid <= -999 {
 		err := BroadcastRpcx(uid, platId, sname, fname, req)
 		if err != nil {
-			// logs.LogError("SendRpcx  plat:%d,%s.%s.%d failed:%s", platId, sname, fname, svrid, err.Error())
+			// logs.Errorf("SendRpcx  plat:%d,%s.%s.%d failed:%s", platId, sname, fname, svrid, err.Error())
 			return err
 		}
 	} else {
 		_, err := rpcxCall(uid, platId, sname, fname, svrid, req, GetRpcCallTimeout(), false)
 		if err != nil {
-			// logs.LogError("SendRpcx  plat:%d,%s.%s.%d failed:%s", platId, sname, fname, svrid, err.Error())
+			// logs.Errorf("SendRpcx  plat:%d,%s.%s.%d failed:%s", platId, sname, fname, svrid, err.Error())
 			return err
 		}
 	}
@@ -682,7 +682,7 @@ func (l *rpcxLogger) Errorf(format string, v ...interface{}) {
 }
 
 func (l *rpcxLogger) Fatal(v ...interface{}) {
-	logs.LogError("rpcx: " + fmt.Sprint(v...))
+	logs.Errorf("rpcx: " + fmt.Sprint(v...))
 	os.Exit(1)
 }
 

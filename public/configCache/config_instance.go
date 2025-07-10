@@ -50,19 +50,19 @@ func SetInstance(key string, val ConfigInterface) ConfigInterface {
 	_locker.Lock()
 	if inst, ok := _configInstances[key]; ok {
 		_locker.Unlock()
-		logs.Trace("GetInstance %s, Listen:%+v On Reload", key, val.ListenTables())
+		logs.Infof("GetInstance %s, Listen:%+v On Reload", key, val.ListenTables())
 		start := time.Now()
 		_ = inst.LoadConfig()
 		tt := time.Since(start)
 		//fmt.Printf("\nLoadConfig %s, Listen:%+v, cost:%d\n", key, val.ListenTables(), tt/time.Millisecond)
-		logs.Trace("LoadConfig %s, Listen:%+v, cost:%d", key, inst.ListenTables(), tt/time.Millisecond)
+		logs.Infof("LoadConfig %s, Listen:%+v, cost:%d", key, inst.ListenTables(), tt/time.Millisecond)
 
 		return inst
 	}
 	_locker.Unlock()
 
 	val.SetConfigKey(key)
-	logs.Trace("SetInstance %s, Listen:%+v On Load", key, val.ListenTables())
+	logs.Infof("SetInstance %s, Listen:%+v On Load", key, val.ListenTables())
 	start := time.Now()
 	err := val.LoadConfig()
 	if err != nil {
@@ -72,7 +72,7 @@ func SetInstance(key string, val ConfigInterface) ConfigInterface {
 	}
 	tt := time.Since(start)
 	//fmt.Printf("\nLoadConfig %s, Listen:%+v, cost:%d\n", key, val.ListenTables(), tt/time.Millisecond)
-	logs.Trace("LoadConfig %s, Listen:%+v, cost:%d", key, val.ListenTables(), tt/time.Millisecond)
+	logs.Infof("LoadConfig %s, Listen:%+v, cost:%d", key, val.ListenTables(), tt/time.Millisecond)
 
 	_locker.Lock()
 	_configInstances[key] = val
@@ -88,7 +88,7 @@ func SetInstance(key string, val ConfigInterface) ConfigInterface {
 	//	}
 	//	tt := time.Since(start)
 	//	fmt.Printf("\nLoadConfig %s, Listen:%+v, cost:%d\n", key, oldVal.ListenTables(), tt/time.Millisecond)
-	//	logs.Trace("LoadConfig %s, Listen:%+v, cost:%d", key, oldVal.ListenTables(), tt/time.Millisecond)
+	//	logs.Infof("LoadConfig %s, Listen:%+v, cost:%d", key, oldVal.ListenTables(), tt/time.Millisecond)
 	//
 	//	_locker.Unlock()
 	//	return oldVal

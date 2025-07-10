@@ -43,7 +43,7 @@ func (m *MysqlCfgManager) fetchMySQLRoutine(dataRefreshCallBack func([]map[strin
 		if m.fetchLastUpdateTime() >= m.LastCheckTime {
 			mData, err := m.fetchMYSQLData()
 			if err != nil {
-				logs.LogError("FetchMYSQLData Error:%s", err.Error())
+				logs.Errorf("FetchMYSQLData Error:%s", err.Error())
 			} else {
 				dataRefreshCallBack(mData)
 			}
@@ -58,7 +58,7 @@ func (m *MysqlCfgManager) fetchLastUpdateTime() int64 {
 		"where TABLE_NAME = '" + m.dbConf.Table + "' and TABLE_SCHEMA = '" + m.dbConf.Database + "'"
 	data, err := m.dbConf.Query(s)
 	if err != nil || len(data) != 1 {
-		logs.LogError("FetchLastUpdateTime Error")
+		logs.Errorf("FetchLastUpdateTime Error")
 		return 0
 	}
 	lastUpdateTime, _ := strconv.Atoi(string((data)[0]["unix_timestamp(UPDATE_TIME)"]))

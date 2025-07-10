@@ -89,7 +89,7 @@ func HandleLogic[R any, T any](r *frame.NatsMsg, logic func(req *R) (resp *T, er
 
 func HandleEvent[R any](r *frame.NatsTransMsg, logic func(req *R) (err *errorMsg.ErrRsp)) int32 {
 	if r == nil {
-		logs.LogError("HandleEvent is nil")
+		logs.Errorf("HandleEvent is nil")
 		return frame.ESMR_FAILED
 	}
 
@@ -97,7 +97,7 @@ func HandleEvent[R any](r *frame.NatsTransMsg, logic func(req *R) (err *errorMsg
 	var req R
 	_err := jsoniter.Unmarshal(r.MsgBody, &req)
 	if _err != nil {
-		logs.LogError("HandleEvent is err:%+v,r.MsgBody:%+v", _err, r.MsgBody)
+		logs.Errorf("HandleEvent is err:%+v,r.MsgBody:%+v", _err, r.MsgBody)
 		return frame.ESMR_FAILED
 	}
 
@@ -114,7 +114,7 @@ func HandleConfig[R any](b []byte, logic func(req *R) (err *errorMsg.ErrRsp)) in
 	var req R
 	_err := jsoniter.Unmarshal(b, &req)
 	if _err != nil {
-		logs.LogError("HandleEvent is err:%+v,r.MsgBody:%+v", _err, string(b))
+		logs.Errorf("HandleEvent is err:%+v,r.MsgBody:%+v", _err, string(b))
 		return frame.ESMR_FAILED
 	}
 	err := logic(&req)
@@ -144,13 +144,13 @@ func Request[T any, H any](group, funcName string, req_param *T, needRsp bool, p
 	var err error
 	req.MsgBody.Param, err = jsoniter.Marshal(&req_param)
 	if err != nil {
-		logs.LogError("%s->%s failed:%v", group, funcName, err)
+		logs.Errorf("%s->%s failed:%v", group, funcName, err)
 		return nil, errorMsg.RspError.Copy(err)
 	}
 	if needRsp { //需要返回
 		rsp, errs := frame.NatsCall(group, svrId, funcName, &req, timeout, platId)
 		if errs != nil {
-			logs.LogError("%s->%s failed:%v", group, funcName, errs)
+			logs.Errorf("%s->%s failed:%v", group, funcName, errs)
 			return nil, errs
 		}
 		if rsp.GetMsgErrNo() != 0 {
@@ -169,7 +169,7 @@ func Request[T any, H any](group, funcName string, req_param *T, needRsp bool, p
 		req.Sess.Channel = 0
 		err := frame.NatsSend(group, svrId, funcName, &req, platId)
 		if err != nil {
-			logs.LogError("%s->%s failed:%s", group, funcName, err)
+			logs.Errorf("%s->%s failed:%s", group, funcName, err)
 			return nil, errorMsg.RspError.Copy(err)
 		}
 		return nil, nil
@@ -231,7 +231,7 @@ func RequestWithSess[T any, H any](sess *frame.Session, group, funcName string, 
 		rsppara = new(H)
 		err = jsoniter.Unmarshal(rsp.GetParam(), &rsppara)
 		if err != nil {
-			//logs.LogError("%s->%s rsp:%+v, param:%s, failed:%s", group, funcName, rsp, string(rsp.GetParam()), err)
+			//logs.Errorf("%s->%s rsp:%+v, param:%s, failed:%s", group, funcName, rsp, string(rsp.GetParam()), err)
 			logs.PrintError("RequestWithSess", group, funcName, "respone from", rsp.Sess, "err:", err, "Unmarshal", rsp.GetParam())
 			return nil, errorMsg.RspError.Copy(err)
 		}
@@ -241,7 +241,7 @@ func RequestWithSess[T any, H any](sess *frame.Session, group, funcName string, 
 		errs := frame.NatsSend(group, svrId, funcName, &req, platId)
 		logs.PrintInfo("rpc-send", group, svrId, funcName, &req, timeout, platId, "err", errs)
 		if errs != nil {
-			//logs.LogError("%s->%s failed:%s", group, funcName, err)
+			//logs.Errorf("%s->%s failed:%s", group, funcName, err)
 			return nil, errs
 		}
 		return nil, nil
@@ -261,13 +261,13 @@ func RequestFromTop[T any, H any](group, funcName string, req_param *T, needRsp 
 	var err error
 	req.MsgBody.Param, err = jsoniter.Marshal(&req_param)
 	if err != nil {
-		logs.LogError("%s->%s failed:%s", group, funcName, err)
+		logs.Errorf("%s->%s failed:%s", group, funcName, err)
 		return nil, errorMsg.RspError.Copy(err)
 	}
 	if needRsp { //需要返回
 		rsp, err := frame.TopCallToPlat(platId, group, -1, funcName, &req, frame.GetCallTimeout())
 		if err != nil {
-			logs.LogError("%s->%s failed:%s", group, funcName, err)
+			logs.Errorf("%s->%s failed:%s", group, funcName, err)
 			return nil, errorMsg.RspError.Copy(err)
 		}
 		if rsp.GetMsgErrNo() != 0 {
@@ -285,7 +285,7 @@ func RequestFromTop[T any, H any](group, funcName string, req_param *T, needRsp 
 	} else {
 		err := frame.TopSendToPlat(platId, group, -1, funcName, &req)
 		if err != nil {
-			logs.LogError("%s->%s failed:%s", group, funcName, err)
+			logs.Errorf("%s->%s failed:%s", group, funcName, err)
 			return nil, errorMsg.RspError.Copy(err)
 		}
 		return nil, nil
@@ -300,13 +300,13 @@ func RequestToTop[T any, H any](group, funcName string, req_param *T, needRsp bo
 	var err error
 	req.MsgBody.Param, err = jsoniter.Marshal(&req_param)
 	if err != nil {
-		logs.LogError("%s->%s failed:%s", group, funcName, err)
+		logs.Errorf("%s->%s failed:%s", group, funcName, err)
 		return nil, errorMsg.RspError.Copy(err)
 	}
 	if needRsp { //需要返回
 		rsp, err := frame.TopNatsCall(group, -1, funcName, &req, frame.GetCallTimeout())
 		if err != nil {
-			logs.LogError("%s->%s failed:%s", group, funcName, err)
+			logs.Errorf("%s->%s failed:%s", group, funcName, err)
 			return nil, errorMsg.RspError.Copy(err)
 		}
 		if rsp.GetMsgErrNo() != 0 {
@@ -325,7 +325,7 @@ func RequestToTop[T any, H any](group, funcName string, req_param *T, needRsp bo
 	} else {
 		err := frame.TopNatsSend(group, -1, funcName, &req)
 		if err != nil {
-			logs.LogError("%s->%s failed:%s", group, funcName, err)
+			logs.Errorf("%s->%s failed:%s", group, funcName, err)
 			return nil, errorMsg.RspError.Copy(err)
 		}
 		return nil, nil

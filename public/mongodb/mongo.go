@@ -144,7 +144,7 @@ func StartMgoDb(wl WriteC, dbs ...int) (err error) {
 func SetDefaultKey(key int8) error {
 	DefaultKey = key
 	if getDbSession(key) == nil {
-		logs.LogError("mongo 获取失败  致命错误 key:%d", key)
+		logs.Errorf("mongo 获取失败  致命错误 key:%d", key)
 		return errors.New("mongo 获取失败  致命错误 ")
 	}
 	return nil
@@ -205,7 +205,7 @@ func initCfg(cfg frame.MgoSvrCfg) (string, frame.MgoSvrCfg) {
 // GetMongoDb change stream 使用，一般不推荐使用这个接口
 func GetMongoDb() *mongo.Client {
 	if db == nil {
-		logs.LogError("mongo Db 获取失败  致命错误")
+		logs.Errorf("mongo Db 获取失败  致命错误")
 		return nil
 	}
 	return db
@@ -214,7 +214,7 @@ func GetMongoDb() *mongo.Client {
 // GetMongoLogDb change stream 使用，一般不推荐使用这个接口
 func GetMongoLogDb() *mongo.Client {
 	if logDb == nil {
-		logs.LogError("mongo logDb 获取失败  致命错误")
+		logs.Errorf("mongo logDb 获取失败  致命错误")
 		return nil
 	}
 	return logDb
@@ -225,7 +225,7 @@ func GetDbSession(key int8) *mongo.Client {
 
 func GetMongoImageDb() *mongo.Client {
 	if imageRepositoryDb == nil {
-		logs.LogError("mongo imageDb 获取失败  致命错误")
+		logs.Errorf("mongo imageDb 获取失败  致命错误")
 		return nil
 	}
 	return imageRepositoryDb
@@ -235,37 +235,37 @@ func getDbSession(key int8) *mongo.Client {
 	switch key {
 	case RealKey:
 		if db == nil {
-			logs.LogError("RealKey mongo 获取失败  致命错误")
+			logs.Errorf("RealKey mongo 获取失败  致命错误")
 			return nil
 		}
 		return db
 	case RealReadKey:
 		if ordb == nil {
-			logs.LogError("RealReadKey mongo 获取失败 致命错误")
+			logs.Errorf("RealReadKey mongo 获取失败 致命错误")
 			return nil
 		}
 		return ordb
 	case ConfKey:
 		if confDb == nil {
-			logs.LogError("ConfKey mongo 获取失败 致命错误")
+			logs.Errorf("ConfKey mongo 获取失败 致命错误")
 			return nil
 		}
 		return confDb
 	case ImageRepositoryKey:
 		if imageRepositoryDb == nil {
-			logs.LogError("ImageRepositoryKey mongo 获取失败 致命错误")
+			logs.Errorf("ImageRepositoryKey mongo 获取失败 致命错误")
 			return nil
 		}
 		return imageRepositoryDb
 	case TopKey:
 		if topDb == nil {
-			logs.LogError("TopKey mongo 获取失败 致命错误")
+			logs.Errorf("TopKey mongo 获取失败 致命错误")
 			return nil
 		}
 		return topDb
 	case LogKey:
 		if logDb == nil {
-			logs.LogError("LogKey mongo 获取 失败 致命错误")
+			logs.Errorf("LogKey mongo 获取 失败 致命错误")
 			return nil
 		}
 		return logDb

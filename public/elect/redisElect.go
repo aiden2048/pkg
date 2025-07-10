@@ -83,7 +83,7 @@ func (r *RedisElect) Run() {
 
 					ttl, err := redisDeal.RedisGetTtl(r.clusterKey)
 					if err != nil {
-						logs.LogError("err:%v", err)
+						logs.Errorf("err:%v", err)
 						continue
 					}
 
@@ -98,14 +98,14 @@ func (r *RedisElect) Run() {
 						lastSuccAtStr := info[0]
 						lastSuccAt, err := strconv.ParseInt(lastSuccAtStr, 10, 64)
 						if err != nil {
-							logs.LogError("err:%v", err)
+							logs.Errorf("err:%v", err)
 							continue
 						}
 
 						if time.Now().Unix()-lastSuccAt > 60 {
 
 							if err = redisDeal.RedisDoDel(r.clusterKey); err != nil {
-								logs.LogError("err:%v", err)
+								logs.Errorf("err:%v", err)
 								continue
 							}
 						}
@@ -118,7 +118,7 @@ func (r *RedisElect) Run() {
 
 				err := redisDeal.RedisSetTtl(r.clusterKey, 15)
 				if err != nil {
-					logs.LogError("err:%v", err)
+					logs.Errorf("err:%v", err)
 					continue
 				}
 
@@ -132,7 +132,7 @@ func (r *RedisElect) Run() {
 
 			err := redisDeal.RedisSetTtl(r.clusterKey, 10)
 			if err != nil {
-				logs.LogError("err:%v", err)
+				logs.Errorf("err:%v", err)
 				continue
 			}
 

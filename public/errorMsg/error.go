@@ -66,7 +66,7 @@ func NewError(ret int32, msgfmt string, p ...interface{}) *ErrRsp { // 有fmt參
 		file2 := utils.GetCallFile(2)
 		go func(f1, f2 string) {
 			time.Sleep(30 * time.Second)
-			logs.LogError("发现重复定义错误码:%d, %s --> %s at: %s -> %s", ret, v, msgfmt, file2, file1)
+			logs.Errorf("发现重复定义错误码:%d, %s --> %s at: %s -> %s", ret, v, msgfmt, file2, file1)
 		}(file1, file2)
 	}
 	_errMap[ret] = msgfmt

@@ -29,7 +29,7 @@ func (dbCfg *DbConf) Query(mSQL string) ([]map[string]sql.RawBytes, error) {
 	mDbConfString := dbCfg.setMySQLConf()
 	db, err := sql.Open("mysql", mDbConfString)
 	if err != nil {
-		logs.LogError(err.Error())
+		logs.Errorf(err.Error())
 		return nil, err
 	}
 	defer db.Close()
@@ -37,7 +37,7 @@ func (dbCfg *DbConf) Query(mSQL string) ([]map[string]sql.RawBytes, error) {
 	//1、query
 	rows, err := db.Query(mSQL)
 	if err != nil {
-		logs.LogError(err.Error())
+		logs.Errorf(err.Error())
 		return nil, err
 	}
 	defer rows.Close()
@@ -45,7 +45,7 @@ func (dbCfg *DbConf) Query(mSQL string) ([]map[string]sql.RawBytes, error) {
 	//2、prepare data space
 	columns, err := rows.Columns()
 	if err != nil {
-		logs.LogError(err.Error())
+		logs.Errorf(err.Error())
 		return nil, err
 	}
 
@@ -59,7 +59,7 @@ func (dbCfg *DbConf) Query(mSQL string) ([]map[string]sql.RawBytes, error) {
 		}
 		err = rows.Scan(scanArgus...)
 		if err != nil {
-			logs.LogError("Scan mysql data error")
+			logs.Errorf("Scan mysql data error")
 			break
 		}
 		rowRecord := make(map[string]sql.RawBytes)

@@ -57,7 +57,7 @@ func InsertOrUpdateDB(table string, data map[string]interface{}, where string) (
 	sqlStr = sqlStr + " WHERE " + where
 	stmt, err := db.Prepare(sqlStr)
 	if err != nil {
-		logs.LogError("db.Prepare %s failed: %+v", sqlStr, err)
+		logs.Errorf("db.Prepare %s failed: %+v", sqlStr, err)
 		return Id, err
 	}
 	defer stmt.Close()
@@ -66,7 +66,7 @@ func InsertOrUpdateDB(table string, data map[string]interface{}, where string) (
 
 	logs.LogDebug("exec sql: %s,arrValues: %+v , result:%+v, err:+%v", sqlStr, arrValues, res, err)
 	if err != nil {
-		logs.LogError("InsertOrUpdateDB %s failed: %s", sqlStr, err.Error())
+		logs.Errorf("InsertOrUpdateDB %s failed: %s", sqlStr, err.Error())
 		stat.ReportStat("rp:mysql.InsertOrUpdateDB."+table, -1, time.Now().Sub(start))
 		return Id, err
 	}
@@ -113,7 +113,7 @@ func UpdateDB(table string, data map[string]interface{}, where string) (int64, e
 	err = getTableErr(table, err)
 	if err != nil {
 
-		logs.LogError("db.Prepare %s failed: %+v", sqlStr, err)
+		logs.Errorf("db.Prepare %s failed: %+v", sqlStr, err)
 		stat.ReportStat("rp:mysql.UpdateDB."+table, -1, time.Now().Sub(start))
 		return Id, err
 	}
@@ -123,7 +123,7 @@ func UpdateDB(table string, data map[string]interface{}, where string) (int64, e
 	logs.LogDebug("exec sql: %s,arrValues: %+v , result:%+v, err:+%v", sqlStr, arrValues, res, err)
 	if err != nil {
 
-		logs.LogError("UpdateDB %s failed: %s", sqlStr, err.Error())
+		logs.Errorf("UpdateDB %s failed: %s", sqlStr, err.Error())
 		stat.ReportStat("rp:mysql.UpdateDB."+table, -2, time.Now().Sub(start))
 		return Id, err
 	}
@@ -131,7 +131,7 @@ func UpdateDB(table string, data map[string]interface{}, where string) (int64, e
 	Id, err = res.RowsAffected()
 	err = getTableErr(table, err)
 	if err != nil {
-		logs.LogError("getTableErr sql: %s failed: %s table:%s", sqlStr, err.Error())
+		logs.Errorf("getTableErr sql: %s failed: %s table:%s", sqlStr, err.Error())
 		return Id, err
 	}
 	return Id, nil
@@ -167,7 +167,7 @@ func InsertDB(table string, data map[string]interface{}) (int64, error) {
 	stmt, err := db.Prepare(sqlStr)
 	err = getTableErr(table, err)
 	if err != nil {
-		logs.LogError("db.Prepare  %s failed: %+v", sqlStr, err)
+		logs.Errorf("db.Prepare  %s failed: %+v", sqlStr, err)
 		stat.ReportStat("rp:mysql.InsertDB."+table, -1, time.Now().Sub(start))
 		return Id, err
 	}
@@ -216,7 +216,7 @@ func SafeExecSql(format string, args ...interface{}) (sql.Result, error, string)
 	ret, err := db.Exec(sql)
 	res := 0
 	if err != nil {
-		logs.LogError("SafeExec %s failed: %s", sql, err.Error())
+		logs.Errorf("SafeExec %s failed: %s", sql, err.Error())
 		res = -1
 	}
 	tmpStr := sql
@@ -267,14 +267,14 @@ func RealSafeQuerySql(format string, args ...interface{}) (*sql.Rows, error, str
 	}
 	res := 0
 	if err != nil {
-		logs.LogError("SafeQuery %s failed: %s", sql, err.Error())
+		logs.Errorf("SafeQuery %s failed: %s", sql, err.Error())
 		res = -1
 	}
 	end := time.Now()
 	n := end.Sub(start)
 	stat.ReportStat("rp:mysql.SafeQuery."+tmpStr, res, n)
 	if n > 5*time.Second { //5秒以上 告警
-		logs.LogError("查询时间 超过 5s sql:%+v,time = %d", sql, n/time.Millisecond)
+		logs.Errorf("查询时间 超过 5s sql:%+v,time = %d", sql, n/time.Millisecond)
 	}
 	return ret, err, sql
 }
@@ -321,14 +321,14 @@ func SafeQuerySql(format string, args ...interface{}) (*sql.Rows, error, string)
 	}
 	res := 0
 	if err != nil {
-		logs.LogError("SafeQuery %s failed: %s", sql, err.Error())
+		logs.Errorf("SafeQuery %s failed: %s", sql, err.Error())
 		res = -1
 	}
 	end := time.Now()
 	n := end.Sub(start)
 	stat.ReportStat("rp:mysql.SafeQuery."+tmpStr, res, n)
 	if n > 6*time.Second { //5秒以上 告警
-		logs.LogError("查询时间 超过 5s sql:%+v,time=%d", sql, n/time.Millisecond)
+		logs.Errorf("查询时间 超过 5s sql:%+v,time=%d", sql, n/time.Millisecond)
 	}
 	return ret, err, sql
 }
@@ -358,14 +358,14 @@ func SafeQueryByString(sql string) (*sql.Rows, error) {
 	}
 	res := 0
 	if err != nil {
-		logs.LogError("SafeQueryByString %s failed: %s", sql, err.Error())
+		logs.Errorf("SafeQueryByString %s failed: %s", sql, err.Error())
 		res = -1
 	}
 	end := time.Now()
 	n := end.Sub(start)
 	stat.ReportStat("rp:mysql.SafeQuery."+tmpStr, res, n)
 	if n > 5*time.Second { //5秒以上 告警
-		logs.LogError("查询时间 超过 5s sql:%+v,time=%d", sql, n/time.Millisecond)
+		logs.Errorf("查询时间 超过 5s sql:%+v,time=%d", sql, n/time.Millisecond)
 	}
 	return ret, err
 }
@@ -403,7 +403,7 @@ func DelTableDB(table string, format string, args ...interface{}) (int64, error)
 	row, err = res.RowsAffected()
 	err = getTableErr(table, err)
 	if err != nil {
-		logs.LogError("DelTableDB %s failed: %s", DelSql, err.Error())
+		logs.Errorf("DelTableDB %s failed: %s", DelSql, err.Error())
 		return row, err
 	}
 	end := time.Now()

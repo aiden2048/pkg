@@ -148,7 +148,7 @@ func (q *BucketQueue) Run() {
 					q.mu.Unlock()
 				}
 				if err != nil {
-					logs.LogError(
+					logs.Errorf(
 						"BucketQueue(name:%s) exec task.%s.id:%s, attempted:%d, FAILED!!reason:%v",
 						q.name, task.name, task.taskId, task.attempted, err,
 					)
@@ -161,7 +161,7 @@ func (q *BucketQueue) Run() {
 						task.delayAt = time.Now().Unix() + int64(task.delay)
 					}
 					if err = q.Reg(task); err != nil {
-						logs.LogError("reg retry task occur err:%v", err)
+						logs.Errorf("reg retry task occur err:%v", err)
 					}
 				}
 			}

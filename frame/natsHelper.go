@@ -61,12 +61,12 @@ func UnloadAllSubject() {
 	for _, sSub := range nsubjs {
 
 		for _, oSub := range sSub.oSubs {
-			logs.Trace("UnRegist Nats Subject :%s, %s", oSub.Subject, oSub.Queue)
+			logs.Infof("UnRegist Nats Subject :%s, %s", oSub.Subject, oSub.Queue)
 			oSub.Unsubscribe()
 			//if sSub.ch != nil {
 			//	close(sSub.ch)
 			//	sSub.ch = nil
-			//	logs.Trace("Close channel for Nats Subject :%s, %s", oSub.Subject, oSub.Queue)
+			//	logs.Infof("Close channel for Nats Subject :%s, %s", oSub.Subject, oSub.Queue)
 			//}
 		}
 	}
@@ -77,7 +77,7 @@ func UnregistNatsSubject(subj, queue string) {
 	for _, sSub := range g_natsSubjects {
 		if sSub.subj == subj && sSub.queue == queue {
 			for _, oSub := range sSub.oSubs {
-				logs.Trace("UnRegist Nats Subject :%s, %s", oSub.Subject, oSub.Queue)
+				logs.Infof("UnRegist Nats Subject :%s, %s", oSub.Subject, oSub.Queue)
 				oSub.Unsubscribe()
 			}
 		} else {
@@ -166,12 +166,12 @@ func NatsCall(mod string, svrid int32, cmd string, req *NatsMsg, args ...int32) 
 	rsp := &NatsMsg{}
 	err := jsoniter.Unmarshal(msg.Data, rsp)
 	if err != nil {
-		logs.LogError("NatsCall %s.%s Unmarshal rsp %s failed:%s", mod, cmd, string(msg.Data), err.Error())
+		logs.Errorf("NatsCall %s.%s Unmarshal rsp %s failed:%s", mod, cmd, string(msg.Data), err.Error())
 		//ret = ESMR_FAILED
 		return nil, errorMsg.RspError.Copy(err)
 	}
 	/*	if rsp.GetMsgErrNo() != 0 {
-		logs.LogError("NatsCall %s.%s GetMsgBody().Ret = %d, %s", mod, cmd, rsp.GetMsgBody().Ret, rsp.GetMsgBody().ErrStr)
+		logs.Errorf("NatsCall %s.%s GetMsgBody().Ret = %d, %s", mod, cmd, rsp.GetMsgBody().Ret, rsp.GetMsgBody().ErrStr)
 		//ret = ESMR_FAILED
 		return rsp, fmt.Errorf("[%d] %s", rsp.GetMsgBody().Ret, rsp.GetMsgBody().ErrStr)
 	}*/
@@ -219,7 +219,7 @@ func NatsCallForTrans(mod string, svrid int32, cmd string, req *NatsMsg, args ..
 	rsp = &NatsTransMsg{}
 	errs := jsoniter.Unmarshal(msg.Data, rsp)
 	if errs != nil {
-		logs.LogError("NatsCall %s.%s Unmarshal rsp %s failed:%s", mod, cmd, string(msg.Data[:]), err.Error())
+		logs.Errorf("NatsCall %s.%s Unmarshal rsp %s failed:%s", mod, cmd, string(msg.Data[:]), err.Error())
 		//ret = ESMR_FAILED
 		return nil, errorMsg.RspError.Copy(errs)
 	}
@@ -267,7 +267,7 @@ func NatsCallTrans(mod string, svrid int32, cmd string, req *NatsTransMsg, args 
 	rsp := &NatsTransMsg{}
 	err := jsoniter.Unmarshal(msg.Data, rsp)
 	if err != nil {
-		logs.LogError("NatsCall %s.%s Unmarshal rsp %s failed:%s", mod, cmd, string(msg.Data[:]), err.Error())
+		logs.Errorf("NatsCall %s.%s Unmarshal rsp %s failed:%s", mod, cmd, string(msg.Data[:]), err.Error())
 		//ret = ESMR_FAILED
 		return nil, errorMsg.RspError.Copy(err)
 	}
@@ -323,7 +323,7 @@ func registNatsHandler(sname, func_name string, svrid int32, handler func(contex
 				rsp := genErrNatsMsg(-1, "")
 				NatsPublish(nConn, msg.Reply, rsp, false, nil)
 			}
-			logs.LogError("HandleRpc Unmarshal req %s failed:%s", string(msg.Data[:]), err.Error())
+			logs.Errorf("HandleRpc Unmarshal req %s failed:%s", string(msg.Data[:]), err.Error())
 			t := time.Since(start)
 			ReportDoRpcStat("Unmarshal", subj, ESMR_FAILED, t)
 			return ESMR_FAILED
@@ -374,7 +374,7 @@ func registNatsTransHandler(sname, func_name string, svrid int32, handler func(m
 			//	rsp := genErrNatsMsg(-1, "")
 			//	NatsPublish(nConn, msg.Reply, rsp, false, nil)
 			//}
-			logs.LogError("HandleRpc Unmarshal req %s failed:%s", string(msg.Data[:]), err.Error())
+			logs.Errorf("HandleRpc Unmarshal req %s failed:%s", string(msg.Data[:]), err.Error())
 			t := time.Since(start)
 			ReportDoRpcStat("Unmarshal", subj, ESMR_FAILED, t)
 			return ESMR_FAILED
@@ -607,7 +607,7 @@ func HandlerEvent_Ex1(subj string, cmd string, handler func(ctx context.Context,
 		req := NatsTransMsg{}
 		err := jsoniter.Unmarshal(msg.Data, &req)
 		if err != nil {
-			logs.LogError("Handle Event Unmarshal req %s failed:%s", string(msg.Data[:]), err.Error())
+			logs.Errorf("Handle Event Unmarshal req %s failed:%s", string(msg.Data[:]), err.Error())
 			t := time.Since(start)
 			ReportDoRpcStat("Unmarshal", subj, ESMR_FAILED, t)
 			return ESMR_FAILED
@@ -666,7 +666,7 @@ func NatsPulishEventByName(server_name string, ename string, eobj interface{}, p
 	default:
 		bdata, err := jsoniter.Marshal(eobj)
 		if err != nil {
-			logs.LogError("Failed to jsoniter.Marshal: %+v", eobj)
+			logs.Errorf("Failed to jsoniter.Marshal: %+v", eobj)
 			return err
 		}
 		msg.MsgBody = bdata
@@ -683,7 +683,7 @@ func NatsPulishEventByName(server_name string, ename string, eobj interface{}, p
 // NotifyReloadConfig("online", "push")
 func NotifyReloadConfig(cfg string, obj interface{}) {
 	subj := fmt.Sprintf("%d.config.%s", GetPlatformId(), cfg)
-	logs.Trace("NotifyReloadConfig subj:%s,obj:%+v", subj, obj)
+	logs.Infof("NotifyReloadConfig subj:%s,obj:%+v", subj, obj)
 	NatsPublish(gNatsconn, subj, obj, false, nil)
 }
 

@@ -46,7 +46,7 @@ func PushChannelMsg(channel uint64, m *NatsTransMsg) {
 				logs.LogUserError(ch.GetUid(), "ch.respChan full, seq %d, uid:%d", channel, ch.GetUid())
 			}
 		} else {
-			logs.LogError("Channel Map Error %d", channel)
+			logs.Errorf("Channel Map Error %d", channel)
 		}
 	} else {
 		logs.LogDebug("Seq Error %d", channel)

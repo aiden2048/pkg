@@ -25,7 +25,7 @@ import (
 // 发送消息到nats
 func NatsPublish(natsConn *nats.Conn, subj string, req interface{}, isReply bool, CheckNatsService func(string) bool) *errorMsg.ErrRsp {
 	if natsConn == nil {
-		logs.LogError("NatsPublish no natsConn")
+		logs.Errorf("NatsPublish no natsConn")
 		return errorMsg.NoService
 	}
 	if !isReply && CheckNatsService != nil {
@@ -36,7 +36,7 @@ func NatsPublish(natsConn *nats.Conn, subj string, req interface{}, isReply bool
 	}
 	data, err := jsoniter.Marshal(req)
 	if err != nil {
-		logs.LogError("NatsPublish Marshal req (%+v) failed:%s", req, err.Error())
+		logs.Errorf("NatsPublish Marshal req (%+v) failed:%s", req, err.Error())
 		return errorMsg.ReqError.Copy(err)
 	}
 	start := time.Now()
@@ -45,7 +45,7 @@ func NatsPublish(natsConn *nats.Conn, subj string, req interface{}, isReply bool
 	ret := 0
 	if err != nil {
 		ret = 1
-		logs.LogError("natsConn %+v Publish[%s] (%d)(%s) failed：%s", natsConn.Servers(), subj, len(data), string(data), err.Error())
+		logs.Errorf("natsConn %+v Publish[%s] (%d)(%s) failed：%s", natsConn.Servers(), subj, len(data), string(data), err.Error())
 		ReportStat("Send", subj, ret, since)
 		return errorMsg.RspError.Copy(err)
 	}
@@ -70,7 +70,7 @@ func NatsPublishJs(natsConn *nats.Conn, subj string, req interface{}, isReply bo
 	}
 	data, err := jsoniter.Marshal(req)
 	if err != nil {
-		logs.LogError("NatsCall Marshal req (%+v) failed:%s", req, err.Error())
+		logs.Errorf("NatsCall Marshal req (%+v) failed:%s", req, err.Error())
 		return errorMsg.ReqError.Copy(err)
 	}
 	natsJs, err := natsConn.JetStream()
@@ -84,7 +84,7 @@ func NatsPublishJs(natsConn *nats.Conn, subj string, req interface{}, isReply bo
 	ret := 0
 	if err != nil {
 		ret = 1
-		logs.LogError("natsConn %+v Publish[%s] (%d)(%s) failed：%s", natsConn.Servers(), subj, len(data), string(data), err.Error())
+		logs.Errorf("natsConn %+v Publish[%s] (%d)(%s) failed：%s", natsConn.Servers(), subj, len(data), string(data), err.Error())
 		ReportStat("Send", subj, int(ret), t)
 		return errorMsg.RspError.Copy(err)
 	}
@@ -100,7 +100,7 @@ func NatsPublishJs(natsConn *nats.Conn, subj string, req interface{}, isReply bo
 
 func NatsCallMsg(natsConn *nats.Conn, mod string, svrid int32, cmd string, req interface{}, timeout time.Duration, CheckNatsService func(string) bool) (*nats.Msg, *errorMsg.ErrRsp) {
 	if natsConn == nil {
-		logs.LogError("no conn")
+		logs.Errorf("no conn")
 		return nil, errorMsg.RspError.Copy("NoConn")
 	}
 	if timeout <= 0 || timeout > 300*time.Second {
@@ -116,7 +116,7 @@ func NatsCallMsg(natsConn *nats.Conn, mod string, svrid int32, cmd string, req i
 
 	data, err := jsoniter.Marshal(req)
 	if err != nil {
-		logs.LogError("NatsCall %s Marshal req (%+v) failed:%s", subj, req, err.Error())
+		logs.Errorf("NatsCall %s Marshal req (%+v) failed:%s", subj, req, err.Error())
 		return nil, errorMsg.ReqParamError.Copy(err)
 	}
 	start := time.Now()
@@ -133,7 +133,7 @@ func NatsCallMsg(natsConn *nats.Conn, mod string, svrid int32, cmd string, req i
 			errs = errorMsg.ReqError.Copy(err)
 			ret = ESMR_FAILED
 		}
-		logs.LogError("natsConn %+v.Request %s , timeout:%d failed:%s", natsConn.Servers(), subj, timeout/time.Millisecond, err.Error())
+		logs.Errorf("natsConn %+v.Request %s , timeout:%d failed:%s", natsConn.Servers(), subj, timeout/time.Millisecond, err.Error())
 		return nil, errs
 	} else {
 		logs.LogDebug("natsConn %+v.Request %s (cost:%v)\n: %s , Response  %s", natsConn.Opts.Servers, subj, t, string(data), string(msg.Data))
@@ -157,7 +157,7 @@ func DoRegistNatsHandlerEx(natsConn *nats.Conn, subj string, queue string, handl
 
 	// TODO Add options logic
 	if natsConn == nil {
-		logs.LogError("no natsConn, subj:%s, queue:%s", subj, queue)
+		logs.Errorf("no natsConn, subj:%s, queue:%s", subj, queue)
 		return errors.New("no natsConn")
 	}
 	//subj := fmt.Sprintf("rpc.%s.%s", server_config.ServiceName, cmd)
@@ -176,10 +176,10 @@ func DoRegistNatsHandlerEx(natsConn *nats.Conn, subj string, queue string, handl
 
 		})
 		if err != nil {
-			logs.LogError("natsConn %+v.QueueSubscribe %s queue:%s failed:%s", natsConn.Servers(), subj, queue, err.Error())
+			logs.Errorf("natsConn %+v.QueueSubscribe %s queue:%s failed:%s", natsConn.Servers(), subj, queue, err.Error())
 			return err
 		}
-		logs.Trace("natsConn %+v.QueueSubscribe %s queue:%s, threadNum: %d succ", natsConn.Servers(), subj, queue, threadNum)
+		logs.Infof("natsConn %+v.QueueSubscribe %s queue:%s, threadNum: %d succ", natsConn.Servers(), subj, queue, threadNum)
 
 		oSubjs = append(oSubjs, oSubj)
 	} else {
@@ -192,10 +192,10 @@ func DoRegistNatsHandlerEx(natsConn *nats.Conn, subj string, queue string, handl
 				//go handler(msg)
 			})
 			if err != nil {
-				logs.LogError("natsConn %+v.QueueSubscribe %s,Index:%d,threadNum:%d queue:%s failed:%s", natsConn.Servers(), subj, i, threadNum, queue, err.Error())
+				logs.Errorf("natsConn %+v.QueueSubscribe %s,Index:%d,threadNum:%d queue:%s failed:%s", natsConn.Servers(), subj, i, threadNum, queue, err.Error())
 				return err
 			}
-			logs.Trace("natsConn %+v.QueueSubscribe %s queue:%s,Index:%d,threadNum:%d succ", natsConn.Servers(), subj, queue, i, threadNum)
+			logs.Infof("natsConn %+v.QueueSubscribe %s queue:%s,Index:%d,threadNum:%d succ", natsConn.Servers(), subj, queue, i, threadNum)
 			oSubjs = append(oSubjs, oSubj)
 		}
 
@@ -230,7 +230,7 @@ func DoRegistNatsJsHandlerEx(natsConn *nats.Conn, subj string, queue string, han
 
 		// TODO Add options logic
 		if natsConn == nil {
-			logs.LogError("no natsConn, subj:%s, queue:%s", subj, queue)
+			logs.Errorf("no natsConn, subj:%s, queue:%s", subj, queue)
 			return errors.New("no natsConn")
 		}
 		natsJs, err := natsConn.JetStream()
@@ -254,10 +254,10 @@ func DoRegistNatsJsHandlerEx(natsConn *nats.Conn, subj string, queue string, han
 
 			})
 			if err != nil {
-				logs.LogError("natsConn %+v.QueueSubscribe %s queue:%s failed:%s", natsConn.Servers(), subj, queue, err.Error())
+				logs.Errorf("natsConn %+v.QueueSubscribe %s queue:%s failed:%s", natsConn.Servers(), subj, queue, err.Error())
 				return err
 			}
-			logs.Trace("natsConn %+v.QueueSubscribe %s queue:%s, threadNum: %d succ", natsConn.Servers(), subj, queue, threadNum)
+			logs.Infof("natsConn %+v.QueueSubscribe %s queue:%s, threadNum: %d succ", natsConn.Servers(), subj, queue, threadNum)
 
 			oSubjs = append(oSubjs, oSubj)
 		} else {
@@ -270,10 +270,10 @@ func DoRegistNatsJsHandlerEx(natsConn *nats.Conn, subj string, queue string, han
 					//go handler(msg)
 				})
 				if err != nil {
-					logs.LogError("natsConn %+v.QueueSubscribe %s,Index:%d,threadNum:%d queue:%s failed:%s", natsConn.Servers(), subj, i, threadNum, queue, err.Error())
+					logs.Errorf("natsConn %+v.QueueSubscribe %s,Index:%d,threadNum:%d queue:%s failed:%s", natsConn.Servers(), subj, i, threadNum, queue, err.Error())
 					return err
 				}
-				logs.Trace("natsConn %+v.QueueSubscribe %s queue:%s,Index:%d,threadNum:%d succ", natsConn.Servers(), subj, queue, i, threadNum)
+				logs.Infof("natsConn %+v.QueueSubscribe %s queue:%s,Index:%d,threadNum:%d succ", natsConn.Servers(), subj, queue, i, threadNum)
 				oSubjs = append(oSubjs, oSubj)
 			}
 
@@ -329,7 +329,7 @@ func ConnToNats(cfg *NatsConfig) (*nats.Conn, error) {
 	// 初始化Nats
 	if err != nil {
 		fmt.Printf("nats.Connect error:%s NatsOpts:%+v", err, NatsOpts)
-		logs.LogError("nats.Connect error:%s", err)
+		logs.Errorf("nats.Connect error:%s", err)
 		return nil, err
 	}
 	logs.LogDebug("MaxPayload:%d", newNatsConn.MaxPayload())

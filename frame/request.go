@@ -478,7 +478,7 @@ func (m *NatsMsg) response(errno int32, errstr string, rspparam interface{}, isE
 		if rspparam != nil {
 			rspmsg.MsgBody.Param, err = jsoniter.Marshal(rspparam)
 			if err != nil {
-				logs.LogError("Failed to jsoniter.Marshal: %+v, err:%+v", rspparam, err)
+				logs.Errorf("Failed to jsoniter.Marshal: %+v, err:%+v", rspparam, err)
 				return errors.New("jsoniter.Marshal rsp failed")
 			}
 		}
@@ -506,7 +506,7 @@ func (m *NatsMsg) response(errno int32, errstr string, rspparam interface{}, isE
 	if rspparam != nil {
 		rspmsg.MsgBody.Param, err = jsoniter.Marshal(rspparam)
 		if err != nil {
-			logs.LogError("Failed to jsoniter.Marshal: %+v, err:%+v", rspparam, err)
+			logs.Errorf("Failed to jsoniter.Marshal: %+v, err:%+v", rspparam, err)
 			return errors.New("jsoniter.Marshal rsp failed")
 		}
 	}
@@ -631,7 +631,7 @@ func (m *NatsTransMsg) IsNeedRsp() bool {
 //	if rspparam != nil {
 //		rspmsg.MsgBody.Param, err = jsoniter.Marshal(rspparam)
 //		if err != nil {
-//			logs.LogError("Failed to jsoniter.Marshal: %+v", rspparam)
+//			logs.Errorf("Failed to jsoniter.Marshal: %+v", rspparam)
 //			return errors.New("jsoniter.Marshal rsp failed")
 //		}
 //	}

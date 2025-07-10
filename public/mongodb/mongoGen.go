@@ -428,7 +428,7 @@ func (m *Mon) FindOneByCacheKey(ctx context.Context, filter bson.M, ckey string,
 	// 写缓存
 	err = redisDeal.RedisDoSet(key, rsp, utils.RandInt64(3600, 7200))
 	if err != nil {
-		logs.LogError("更新缓存数据出错,db:%s,tb:%s,err:%+v", m.db, m.tb, err)
+		logs.Errorf("更新缓存数据出错,db:%s,tb:%s,err:%+v", m.db, m.tb, err)
 	}
 
 	return nil
@@ -650,7 +650,7 @@ func (m *Mon) Trans(ctx context.Context, fn func(mongo.SessionContext) error) (e
 		}
 		err = sc.CommitTransaction(context.TODO())
 		if err != nil {
-			logs.LogError("事务提交出错,db:%s,tb:%s,err:%+v", m.db, m.tb, err)
+			logs.Errorf("事务提交出错,db:%s,tb:%s,err:%+v", m.db, m.tb, err)
 		}
 		return err
 	})
@@ -892,7 +892,7 @@ func (m *Mon) CreatIndexByIndexKey(ctx context.Context, indexKey []string) {
 	DB := getDbSession(m.dbKey)
 	_, err := DB.Database(m.db).Collection(m.tb).Indexes().CreateMany(ctx, models)
 	if err != nil {
-		logs.LogError("创建索引失败,db:%s,tb:%s,err:%+v，index:%s", m.db, m.tb, err, indexKey)
+		logs.Errorf("创建索引失败,db:%s,tb:%s,err:%+v，index:%s", m.db, m.tb, err, indexKey)
 	}
 	for _, in := range indexKey {
 		key := fmt.Sprintf("%s.%s.%s", m.db, m.tb, in)

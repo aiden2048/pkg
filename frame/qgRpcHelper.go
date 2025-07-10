@@ -19,11 +19,11 @@ import (
 // 推送消息至客户端
 func SendMsgToClient(sess *Session, errno int32, errstr string, f string, msgParam interface{}, isEncrypt bool) error {
 	if sess == nil {
-		logs.LogError("sess is nil")
+		logs.Errorf("sess is nil")
 		return errors.New("sess is nil")
 	}
 	if sess.GetServerFE() == "" || sess.GetServerID() == 0 {
-		logs.LogError("Server %s:%d is invalid", sess.GetServerFE(), sess.GetServerID())
+		logs.Errorf("Server %s:%d is invalid", sess.GetServerFE(), sess.GetServerID())
 		return fmt.Errorf("Server %s:%d is invalid", sess.GetServerFE(), sess.GetServerID())
 	}
 	rspmsg := NatsMsg{Sess: *sess}
@@ -39,7 +39,7 @@ func SendMsgToClient(sess *Session, errno int32, errstr string, f string, msgPar
 	if msgParam != nil {
 		str, err = jsoniter.Marshal(msgParam)
 		if err != nil {
-			logs.LogError("Failed to jsoniter.Marshal: %+v", msgParam)
+			logs.Errorf("Failed to jsoniter.Marshal: %+v", msgParam)
 			return errors.New("jsoniter.Marshal rsp failed")
 		}
 	}
@@ -109,11 +109,11 @@ func NatsSend(mod string, svrid int32, cmd string, req *NatsMsg, pids ...int32) 
 // 推送消息至客户端
 func SendBinaryMsgToClient(sess *Session, msgParam []byte) error {
 	if sess == nil {
-		logs.LogError("sess is nil")
+		logs.Errorf("sess is nil")
 		return errors.New("sess is nil")
 	}
 	if sess.GetServerFE() == "" || sess.GetServerID() == 0 {
-		logs.LogError("Server %s:%d is invalid", sess.GetServerFE(), sess.GetServerID())
+		logs.Errorf("Server %s:%d is invalid", sess.GetServerFE(), sess.GetServerID())
 		return fmt.Errorf("Server %s:%d is invalid", sess.GetServerFE(), sess.GetServerID())
 	}
 	// if sess.GetUid() > 0 {

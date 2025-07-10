@@ -78,7 +78,7 @@ func Substr(s string, start, length int) string {
 func GetUUID() string {
 	u := uuid.NewV4()
 	// if err != nil {
-	// 	//logs.LogError("GetUUID err:%+v", err)
+	// 	//logs.Errorf("GetUUID err:%+v", err)
 	// 	return ""
 	// }
 	return fmt.Sprintf("%s", u)

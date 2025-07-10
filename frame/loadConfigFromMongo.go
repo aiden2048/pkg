@@ -94,9 +94,9 @@ func LoadConfigFromMongo(key string, conf interface{}) error {
 	}
 
 	if err != nil {
-		logs.Trace("LoadConfigFromMongo %s: Decode:%+v", key, err)
+		logs.Infof("LoadConfigFromMongo %s: Decode:%+v", key, err)
 		return err
 	}
-	logs.Trace("LoadConfigFromMongo %s: %+v", key, conf)
+	logs.Infof("LoadConfigFromMongo %s: %+v", key, conf)
 	return nil
 }

@@ -118,10 +118,10 @@ func LoadNatsConfig() error {
 	if newConf.GetNatsConfig(0) != nil {
 		if GetNatsConn() == nil || !checkNatsConfigEqual(natsConfig.GetNatsConfig(0), newConf.GetNatsConfig(0)) {
 			if err := StartNatsService(newConf.GetNatsConfig(0)); err == nil {
-				logs.Trace("Save Nats Config:%+v", newConf.GetNatsConfig(0))
+				logs.Infof("Save Nats Config:%+v", newConf.GetNatsConfig(0))
 			} else {
 				logs.Errorf("Start NatsService Failed:%s", err.Error())
-				logs.Trace("New Nats Config:%+v can not be connected, keep config:%+v", newConf.GetNatsConfig(0), natsConfig.GetNatsConfig(0))
+				logs.Infof("New Nats Config:%+v can not be connected, keep config:%+v", newConf.GetNatsConfig(0), natsConfig.GetNatsConfig(0))
 				return err
 			}
 		}

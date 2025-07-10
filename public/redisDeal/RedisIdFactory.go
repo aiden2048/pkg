@@ -22,7 +22,7 @@ func GenRedisIncrId(src string, ininc ...int64) int64 {
 	key := redisKeys.GenRedisIdFactoryKey()
 	seq, err := RedisDoHincrby(key, src, inc)
 	if err != nil && err != redis.ErrNil {
-		logs.LogError("redis RedisDoHincrby key:%s,src:%s failed:%s ", key, src, err.Error())
+		logs.Errorf("redis RedisDoHincrby key:%s,src:%s failed:%s ", key, src, err.Error())
 		return -1
 	}
 

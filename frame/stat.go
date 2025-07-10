@@ -40,7 +40,7 @@ b := &msg.PbMsg{req}
 	rpc := NewRpc(session)
 	rsp, err := rpc.NatsCall(session.GetUin(), "monitor", "StatisicDataReport", rb, 2)
 	if err != nil {
-		logs.Trace("monitor StatisicDataReport failed:%s", err)
+		logs.Infof("monitor StatisicDataReport failed:%s", err)
 		return nil, errors.New("NatsCall Error")
 	}
 	// 转成PbMsg
@@ -52,7 +52,7 @@ b := &msg.PbMsg{req}
 			return nil, errors.New("Rsp Error") //
 		}
 	} else {
-		logs.Trace("Recv Error Msg")
+		logs.Infof("Recv Error Msg")
 		return nil, errors.New("Rsp Error") //
 	}
 }

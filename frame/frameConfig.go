@@ -179,8 +179,8 @@ func InitConfig(svrName string, opt ...*FrameOption) error {
 	baselib.RegisterReloadFunc(CheckSysStatus)
 	// 加载启动配置
 	if err := LoadBootConfig(); err != nil {
-		logs.LogError("InitConfig error:%s", err)
-		logs.LogError("Run exit")
+		logs.Errorf("InitConfig error:%s", err)
+		logs.Errorf("Run exit")
 		//等待一会, 让日志打印出去
 		time.Sleep(sleepTime)
 		return err
@@ -206,8 +206,8 @@ func InitConfig(svrName string, opt ...*FrameOption) error {
 	}
 	baselib.RegisterReloadFunc(LoadGlobalConfig)
 	baselib.RegisterReloadFunc(LoadFrameConfig)
-	logs.Trace("Init Server GOMAXPROCS:%d, NumCpu:%d", cpun, runtime.NumCPU())
-	logs.Trace("Init Server %+v, FrameConfig:%+v", server_config, config)
+	logs.Infof("Init Server GOMAXPROCS:%d, NumCpu:%d", cpun, runtime.NumCPU())
+	logs.Infof("Init Server %+v, FrameConfig:%+v", server_config, config)
 
 	if err := LoadSystemConfig(); err != nil {
 		//等待一会, 让日志打印出去
@@ -218,8 +218,8 @@ func InitConfig(svrName string, opt ...*FrameOption) error {
 	logs.SetServerId(GetServerID())
 
 	if err := StartLoadNatsServices(); err != nil {
-		logs.LogError("StartLoadNatsServices error:%s", err)
-		logs.LogError("Run exit")
+		logs.Errorf("StartLoadNatsServices error:%s", err)
+		logs.Errorf("Run exit")
 		//等待一会, 让日志打印出去
 		time.Sleep(sleepTime)
 		return err
@@ -227,7 +227,7 @@ func InitConfig(svrName string, opt ...*FrameOption) error {
 	//启动topnats, 暂时不支持热更新 配置
 	//if defFrameOption.EnableTopNats {
 	//	if err := LoadTopNatsConfig(); err != nil {
-	//		logs.Trace("LoadTopNatsConfig err:%+v", err)
+	//		logs.Infof("LoadTopNatsConfig err:%+v", err)
 	//	}
 	//}
 
@@ -259,14 +259,14 @@ func LoadBootConfig() error {
 		if err != nil {
 			return err
 		}
-		logs.Trace("connect to Mysql")
+		logs.Infof("connect to Mysql")
 	}
 	if !defFrameOption.DisableMgo {
 		err := LoadMgoConfig()
 		if err != nil {
 			return err
 		}
-		logs.Trace("connect to Mgo")
+		logs.Infof("connect to Mgo")
 	}
 	//plat := _global_config.PlatformID
 	//mix := _global_config.EnableMixServer
@@ -289,36 +289,36 @@ func _loadFrameConfig() (*FrameConfig, error) {
 	filename := "../LocalConfig/frame.toml"
 	_, err := toml.DecodeFile(filename, newConf)
 	if err == nil {
-		logs.Trace("load LocalFile %s config: %+v", filename, newConf)
+		logs.Infof("load LocalFile %s config: %+v", filename, newConf)
 		return newConf, err
 	}
 	if !os.IsNotExist(err) {
-		logs.LogError("DecodeFile:%s failed:%s", filename, err.Error())
+		logs.Errorf("DecodeFile:%s failed:%s", filename, err.Error())
 	}
 
 	//===============从mysql读取==================
 	filename = fmt.Sprintf("frame_%s_%d.toml", sname, GetServerID())
 	err = LoadConfigFromMongo(filename, newConf)
 	if err == nil {
-		logs.Trace("load Mysql %s config: %+v", filename, newConf)
+		logs.Infof("load Mysql %s config: %+v", filename, newConf)
 		return newConf, err
 	}
 
 	filename = fmt.Sprintf("frame_%s.toml", sname)
 	err = LoadConfigFromMongo(filename, newConf)
 	if err == nil {
-		logs.Trace("load Mysql %s config: %+v", filename, newConf)
+		logs.Infof("load Mysql %s config: %+v", filename, newConf)
 		return newConf, err
 	}
 
 	filename = "frame.toml"
 	err = LoadConfigFromMongo(filename, newConf)
 	if err == nil {
-		logs.Trace("load Mysql %s config: %+v", filename, newConf)
+		logs.Infof("load Mysql %s config: %+v", filename, newConf)
 		return newConf, err
 	}
 	//err = errors.Errorf("no config for  %s_%d.toml", GetServerName(), GetServerID()))
-	logs.Trace("load Mysql %s failed: %+v", filename, err.Error())
+	logs.Infof("load Mysql %s failed: %+v", filename, err.Error())
 	return newConf, err
 }
 
@@ -328,9 +328,9 @@ func LoadFrameConfig() error {
 			return err
 		}
 	}
-	logs.Trace("Read Etcd Config:%+v", etcdConfig)
+	logs.Infof("Read Etcd Config:%+v", etcdConfig)
 	newConf, _ := _loadFrameConfig()
-	//logs.Trace("Load Config:%+v from: %s", newConf, filename)
+	//logs.Infof("Load Config:%+v from: %s", newConf, filename)
 	if newConf.RpcCallTimeout <= 0 {
 		newConf.RpcCallTimeout = DEFAULT_RPC_REQUEST_SECONDS
 	}
@@ -356,7 +356,7 @@ func LoadSystemConfig() error {
 			return err
 		}
 	}
-	logs.Trace("Read Nats Config:%+v", natsConfig)
+	logs.Infof("Read Nats Config:%+v", natsConfig)
 
 	return nil
 }
@@ -379,7 +379,7 @@ func _loadLogConfig() (*logger2.LogConf, error) {
 	filename := "../LocalConfig/log.toml"
 	_, err := toml.DecodeFile(filename, newConf)
 	if err == nil {
-		logs.Trace("load LocalFile %s config: %+v", filename, newConf)
+		logs.Infof("load LocalFile %s config: %+v", filename, newConf)
 		return nil, err
 	}
 	return newConf, err
@@ -393,7 +393,7 @@ func LoadUinConfig(cfg *logger2.LogConf) error {
 	logs.ClearTraceUid()
 	logs.SetTraceAllUid(cfg.GameFrame.TraceAllUid)
 	if cfg.GameFrame.TraceAllUid {
-		logs.Trace("Log.TraceAllUid")
+		logs.Infof("Log.TraceAllUid")
 		//return nil
 	}
 
@@ -406,7 +406,7 @@ func LoadUinConfig(cfg *logger2.LogConf) error {
 		for _, u := range newConf.Uids {
 			if u > 10000 {
 				logs.AddTraceUid(u)
-				logs.Trace("AddTraceUid %d Local", u)
+				logs.Infof("AddTraceUid %d Local", u)
 			}
 		}
 		return nil
@@ -414,14 +414,14 @@ func LoadUinConfig(cfg *logger2.LogConf) error {
 
 	err = LoadConfigFromMongo(fkey, newConf)
 	if err != nil {
-		logs.Trace("load Mysql %s config: %+v", fkey, newConf)
+		logs.Infof("load Mysql %s config: %+v", fkey, newConf)
 		return err
 	}
 
 	for _, u := range newConf.Uids {
 		if u > 10000 {
 			logs.AddTraceUid(u)
-			logs.Trace("AddTraceUid %d Mysql", u)
+			logs.Infof("AddTraceUid %d Mysql", u)
 		}
 	}
 
@@ -438,25 +438,25 @@ func LoadServerLocalConfig(newConf interface{}, args ...string) error {
 	filename := fmt.Sprintf("../LocalConfig/%s.toml", sname)
 	_, err := toml.DecodeFile(filename, newConf)
 	if err == nil {
-		logs.Trace("load LocalFile %s config: %+v", filename, newConf)
+		logs.Infof("load LocalFile %s config: %+v", filename, newConf)
 		return err
 	}
 	if !os.IsNotExist(err) {
-		logs.LogError("DecodeFile:%s failed:%s", filename, err.Error())
+		logs.Errorf("DecodeFile:%s failed:%s", filename, err.Error())
 	}
 
 	//===============从mysql读取==================
 	filename = fmt.Sprintf("%s_%d.toml", sname, GetServerID())
 	err = LoadConfigFromMongo(filename, newConf)
 	if err == nil {
-		logs.Trace("load Mysql %s config: %+v", filename, newConf)
+		logs.Infof("load Mysql %s config: %+v", filename, newConf)
 		return err
 	}
 
 	filename = fmt.Sprintf("%s.toml", sname)
 	err = LoadConfigFromMongo(filename, newConf)
 	if err == nil {
-		logs.Trace("load Mysql %s config: %+v", filename, newConf)
+		logs.Infof("load Mysql %s config: %+v", filename, newConf)
 		return err
 	}
 	if len(args) > 0 {
@@ -464,18 +464,18 @@ func LoadServerLocalConfig(newConf interface{}, args ...string) error {
 		filename = fmt.Sprintf("%s.toml", sname)
 		err = LoadConfigFromMongo(filename, newConf)
 		if err == nil {
-			logs.Trace("load Mysql %s config: %+v", filename, newConf)
+			logs.Infof("load Mysql %s config: %+v", filename, newConf)
 			return err
 		}
 	}
 
 	//err = errors.Errorf("no config for  %s_%d.toml", GetServerName(), GetServerID()))
-	logs.Trace("load Mysql %s failed: %+v", filename, err.Error())
-	//logs.Trace("Load Config:%+v from: %s", newConf, filename)
+	logs.Infof("load Mysql %s failed: %+v", filename, err.Error())
+	//logs.Infof("Load Config:%+v from: %s", newConf, filename)
 	//tempConfig := &BaseLocalConfig{}
 	//_, err = toml.DecodeFile(filename, tempConfig)
 	//if tempConfig.Log != nil {
-	//	logs.Trace("Load LogConfig OnApp:%+v", tempConfig.Log)
+	//	logs.Infof("Load LogConfig OnApp:%+v", tempConfig.Log)
 	//	LoadLogConfig(tempConfig.Log)
 	//}
 

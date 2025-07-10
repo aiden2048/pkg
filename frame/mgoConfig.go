@@ -79,7 +79,7 @@ func LoadMgoConfig() error {
 	_, err := toml.DecodeFile(filename, newConf)
 	if err != nil {
 		if !os.IsNotExist(err) {
-			logs.LogError("DecodeFile:%s failed:%s", fkey, err.Error())
+			logs.Errorf("DecodeFile:%s failed:%s", fkey, err.Error())
 		}
 		return err
 	}

@@ -17,14 +17,14 @@ func CheckSysStatus() error {
 	if fileutil.Exist("clear") {
 		os.Remove("clear")
 		log.Printf("Server want to clear rpcx from reload\n")
-		logs.Trace("Server want to clear rpcx from reload\n")
+		logs.Infof("Server want to clear rpcx from reload\n")
 
 		ReclearRpcxClient()
 	}
 	if fileutil.Exist("unload") {
 		os.Remove("unload")
 		log.Printf("Server want to unload from reload\n")
-		logs.Trace("Server want to unload from reload\n")
+		logs.Infof("Server want to unload from reload\n")
 		//baselib.Stop()
 		ManualStop()
 		//time.Sleep(2 * time.Second)
@@ -33,7 +33,7 @@ func CheckSysStatus() error {
 	if fileutil.Exist("stop") {
 		os.Remove("stop")
 		log.Printf("Server want to stop from reload\n")
-		logs.Trace("Server want to stop from reload\n")
+		logs.Infof("Server want to stop from reload\n")
 		baselib.Stop()
 
 		ManualStop()

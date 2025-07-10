@@ -38,18 +38,18 @@ func LoadMysqlConfig() error {
 	fkey := "MysqlConfig.toml"
 	configPath := "../GlobalConfig/MysqlConfig.toml"
 	if _, err := os.Stat(configPath); err != nil {
-		logs.LogError("Load configPath: %+v", err)
+		logs.Errorf("Load configPath: %+v", err)
 		return err
 	}
 	if _, err := toml.DecodeFile(configPath, new_cfg); err != nil {
-		logs.LogError("Load configPath: %+v", err)
+		logs.Errorf("Load configPath: %+v", err)
 		if err := LoadConfigFromMongo(fkey, new_cfg); err != nil {
 			log.Printf("LoadConfig From Mongo[%s]: %+v", fkey, err)
-			logs.LogError("LoadConfig From Mongo[%s]: %+v", fkey, err)
+			logs.Errorf("LoadConfig From Mongo[%s]: %+v", fkey, err)
 			return err
 		}
 	}
-	logs.Trace("LoadMysqlConfig:%+v", new_cfg)
+	logs.Infof("LoadMysqlConfig:%+v", new_cfg)
 	if new_cfg.IsEncry {
 		new_cfg.Real.Host = Decrypt(new_cfg.Real.Host)
 		new_cfg.Real.User = Decrypt(new_cfg.Real.User)

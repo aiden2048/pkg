@@ -65,7 +65,7 @@ func NewSched(cfg SchedCfg) (*Sched, error) {
 	// 选举器，同时间只有一个进程参与任务调度
 	e, err := elect.NewRedisElect(cfg.Name, uuid.NewV4().String())
 	if err != nil {
-		logs.LogError("err:%v", err)
+		logs.Errorf("err:%v", err)
 		return nil, err
 	}
 	sched := &Sched{
@@ -166,7 +166,7 @@ func (s *Sched) Run() {
 
 func (s *Sched) Add(taskId, taskGrp string) {
 	if !s.IsMaster() {
-		logs.Trace("im not master")
+		logs.Infof("im not master")
 		return
 	}
 	s.evtCh <- &taskEvt{
@@ -178,7 +178,7 @@ func (s *Sched) Add(taskId, taskGrp string) {
 
 func (s *Sched) Del(taskId string) {
 	if !s.IsMaster() {
-		logs.Trace("im not master")
+		logs.Infof("im not master")
 		return
 	}
 	s.evtCh <- &taskEvt{
@@ -267,7 +267,7 @@ func (s *Sched) stopTask(runner *taskRunner) {
 	select {
 	case runner.stopCh <- struct{}{}:
 	default:
-		logs.Trace("stop task chan full (%v_%v) ", s.Name, runner.taskId)
+		logs.Infof("stop task chan full (%v_%v) ", s.Name, runner.taskId)
 	}
 }
 
@@ -385,7 +385,7 @@ func (r *taskRunner) run() {
 
 		task, err := r.sched.NewTaskHdl(r.taskId, r.taskGrp)
 		if err != nil {
-			logs.LogError("err:%v", err)
+			logs.Errorf("err:%v", err)
 			return
 		}
 

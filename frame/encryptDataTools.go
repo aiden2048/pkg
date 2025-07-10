@@ -100,14 +100,14 @@ func DecodeStrNoPadding(str string, key ...string) string {
 func RSADecrypt(base64Txt string) string {
 	cipherText, decodeErr := base64.StdEncoding.DecodeString(base64Txt)
 	if decodeErr != nil {
-		logs.LogError("rsa decide error:%+v, base64Txt:%+v", decodeErr, base64Txt)
+		logs.Errorf("rsa decide error:%+v, base64Txt:%+v", decodeErr, base64Txt)
 		return ""
 	}
 	block, _ := pem.Decode(RSA_PHONE_PRI_KEY)
 	//X509解码
 	privateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
 	if err != nil {
-		logs.LogError("rsa decrypt error:%+v, base64Txt:%+v", decodeErr, base64Txt)
+		logs.Errorf("rsa decrypt error:%+v, base64Txt:%+v", decodeErr, base64Txt)
 		return ""
 	}
 	//对密文进行解密

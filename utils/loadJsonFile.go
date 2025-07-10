@@ -39,7 +39,7 @@ func ClearFileCache() {
 func LoadJsonFile(path string) (ret_buffer []byte, err error) {
 	config_file, err := os.Open(path)
 	if err != nil {
-		//logs.LogError("Failed to open config file '%s': %s\n", path, err)
+		//logs.Errorf("Failed to open config file '%s': %s\n", path, err)
 		errstr := fmt.Sprintf("Failed to open config file '%s': %s\n", path, err)
 		return nil, errors.New(errstr)
 	}
@@ -51,7 +51,7 @@ func LoadJsonFile(path string) (ret_buffer []byte, err error) {
 	}
 
 	if fi.Size() == 0 {
-		//logs.LogError("config file (%q) is empty, skipping", path)
+		//logs.Errorf("config file (%q) is empty, skipping", path)
 		errstr := fmt.Sprintf("config file (%q) is empty, skipping", path)
 		return nil, errors.New(errstr)
 	}
@@ -61,7 +61,7 @@ func LoadJsonFile(path string) (ret_buffer []byte, err error) {
 
 	//buffer, err = StripComments(buffer) //去掉注释
 	if err != nil {
-		//	logs.LogError("Failed to strip comments from json: %s\n", err.Error())
+		//	logs.Errorf("Failed to strip comments from json: %s\n", err.Error())
 		errstr := fmt.Sprintf("Failed to strip comments from json: %s\n", err.Error())
 		return nil, errors.New(errstr)
 	}

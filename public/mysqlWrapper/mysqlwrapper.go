@@ -60,7 +60,7 @@ func InitMysql(key string, cfg *frame.MysqlSvrCfg, database string) (error, *sql
 	mysqlCfg.AllowNativePasswords = true
 	db, err := sql.Open("mysql", mysqlCfg.FormatDSN())
 	if err != nil {
-		logs.LogError("ConnMysql %s: %+v, db:%s failed:%s", key, cfg, database, err.Error())
+		logs.Errorf("ConnMysql %s: %+v, db:%s failed:%s", key, cfg, database, err.Error())
 		return err, nil
 	}
 	maxConnCount := 2000 //runtime.GOMAXPROCS(0) * 16
@@ -71,7 +71,7 @@ func InitMysql(key string, cfg *frame.MysqlSvrCfg, database string) (error, *sql
 
 	db.Ping()
 
-	logs.Trace("Conn to Mysql")
+	logs.Infof("Conn to Mysql")
 	return nil, db
 }
 

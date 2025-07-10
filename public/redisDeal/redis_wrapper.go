@@ -203,7 +203,7 @@ func GetRedisPool(sec ...string) redis.UniversalClient {
 	if p, ok := G_redisPool[s]; ok {
 		return p
 	}
-	logs.LogError("找不到redis:%s, 暂时用默认redis代替,马上检查配置以及代码", s)
+	logs.Errorf("找不到redis:%s, 暂时用默认redis代替,马上检查配置以及代码", s)
 	return G_redisPool[REDIS_INDEX_COMMON] //避免死循环
 
 }

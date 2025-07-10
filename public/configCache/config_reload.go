@@ -113,7 +113,7 @@ func ReloadConfig(keys []string) {
 	_locker.Lock()
 	ccs := make(map[string]ConfigInterface, len(_configInstances))
 
-	logs.Trace("============================Begin ReloadConfigCache for keys:%+v============================", keys)
+	logs.Infof("============================Begin ReloadConfigCache for keys:%+v============================", keys)
 	logs.Console("Begin ReloadConfigCache for keys", keys)
 	logs.WriteBill("root_config", "=================Begin ReloadConfigCache for keys:%+v=================", keys)
 	for k, c := range _configInstances {
@@ -126,7 +126,7 @@ func ReloadConfig(keys []string) {
 						if ok {
 							if now-lastTime < c.Intervals() {
 								WaitReloadKey.Store(kk, now)
-								logs.Trace("============================Stop ReloadConfigCache for k:%+v, table:%+v,intervals:%+d,need:%d============================", k, kk, now-lastTime, c.Intervals())
+								logs.Infof("============================Stop ReloadConfigCache for k:%+v, table:%+v,intervals:%+d,need:%d============================", k, kk, now-lastTime, c.Intervals())
 								continue
 							}
 						}
@@ -150,7 +150,7 @@ func ReloadConfig(keys []string) {
 	//	if c, ok := ccs[k]; ok {
 	//		cc, _ := c.ReloadConfig()
 	//		delete(ccs, k)
-	//		logs.Trace("ReloadConfigCache 配置:%s 更换内存对象从%p->%p", k, c, cc)
+	//		logs.Infof("ReloadConfigCache 配置:%s 更换内存对象从%p->%p", k, c, cc)
 	//	}
 	//}
 	clist := make(ConfigInterfaceList, 0, len(ccs))
@@ -160,7 +160,7 @@ func ReloadConfig(keys []string) {
 	sort.Sort(clist)
 	for _, c := range clist {
 		k := c.GetConfigKey()
-		logs.Trace("==============ReloadConfigCache [%s:%d]  listen:%+v==============", k, c.GetPower(), c.ListenTables())
+		logs.Infof("==============ReloadConfigCache [%s:%d]  listen:%+v==============", k, c.GetPower(), c.ListenTables())
 		logs.Console(fmt.Sprintf("==============ReloadConfigCache [%s:%d]  listen:%+v==============", k, c.GetPower(), c.ListenTables()))
 		cc, err := c.ReloadConfig()
 		if err != nil {
@@ -168,7 +168,7 @@ func ReloadConfig(keys []string) {
 			logs.PrintErr("ReloadConfigCache 严重错误,进程可能要挂掉", "加载配置失败", k, err.Error(), "继续保留原配置........")
 			continue
 		}
-		logs.Trace("ReloadConfigCache 配置:%s 更换内存对象从%p->%p", k, c, cc)
+		logs.Infof("ReloadConfigCache 配置:%s 更换内存对象从%p->%p", k, c, cc)
 		if c != cc {
 			_locker.Lock()
 			cc.SetConfigKey(k)
@@ -176,30 +176,30 @@ func ReloadConfig(keys []string) {
 			_configInstances[k] = cc
 			_locker.Unlock()
 		}
-		logs.Trace("==============end ReloadConfigCache [%s]  listen:%+v==============", k, c.ListenTables())
+		logs.Infof("==============end ReloadConfigCache [%s]  listen:%+v==============", k, c.ListenTables())
 		logs.Console(fmt.Sprintf("==============end ReloadConfigCache [%s]  listen:%+v==============", k, c.ListenTables()))
 	}
 	/*
 
 		for k, c := range ccs {
-			logs.Trace("==============ReloadConfigCache [%s]  listen:%+v==============", k, c.ListenTables())
+			logs.Infof("==============ReloadConfigCache [%s]  listen:%+v==============", k, c.ListenTables())
 			cc, err := c.ReloadConfig()
 			if err != nil {
 				//log.Panicf("config instance: %s LoadConfig:%+v", key, err)
 				logs.PrintErr("ReloadConfigCache 严重错误,进程可能要挂掉", "加载配置失败", k, err.Error(), "继续保留原配置........")
 				continue
 			}
-			logs.Trace("ReloadConfigCache 配置:%s 更换内存对象从%p->%p", k, c, cc)
+			logs.Infof("ReloadConfigCache 配置:%s 更换内存对象从%p->%p", k, c, cc)
 			if c != cc {
 				_locker.Lock()
 				_configInstances[k] = cc
 				_locker.Unlock()
 			}
 
-			logs.Trace("==============end ReloadConfigCache [%s]  listen:%+v==============", k, c.ListenTables())
+			logs.Infof("==============end ReloadConfigCache [%s]  listen:%+v==============", k, c.ListenTables())
 		}
 	*/
-	logs.Trace("============================End ReloadConfigCache for keys:%+v============================", keys)
+	logs.Infof("============================End ReloadConfigCache for keys:%+v============================", keys)
 	logs.Console(fmt.Sprintf("============================End ReloadConfigCache for keys:%+v============================", keys))
 	logs.WriteBill("root_config", "=================End ReloadConfigCache for keys:%+v, cost:%d=================", keys, time.Now().Sub(start)/time.Millisecond)
 }

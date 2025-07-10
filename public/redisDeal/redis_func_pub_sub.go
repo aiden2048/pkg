@@ -16,14 +16,14 @@ import (
 // PUBLISH
 func RedisDoPUBLISH(key *redisKeys.RedisKeys, data interface{}) error {
 	if !check(key) {
-		logs.LogError("key =%s 不属于 %s", key.Key, key.Name)
+		logs.Errorf("key =%s 不属于 %s", key.Key, key.Name)
 		return errorMsg.Err_NoRedisTmpl
 	}
 	str, ok := data.(string)
 	if !ok { //不是字符串
 		datastr, err := jsoniter.MarshalToString(data)
 		if err != nil {
-			logs.LogError("解析失败 key:%s,value:%+v error:%+v", key.Key, data, err)
+			logs.Errorf("解析失败 key:%s,value:%+v error:%+v", key.Key, data, err)
 			return err
 		}
 		str = datastr
