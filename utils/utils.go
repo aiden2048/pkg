@@ -2,7 +2,9 @@ package utils
 
 import (
 	"bytes"
+	"crypto/md5"
 	"encoding/csv"
+	"encoding/hex"
 	"encoding/json"
 	"math"
 	"regexp"
@@ -1688,4 +1690,11 @@ func GetDecimal(data interface{}) decimal.Decimal {
 		}
 	}
 	return decimal.NewFromFloat(0)
+}
+
+func Md5(data string) string {
+	h := md5.New()
+	h.Write([]byte(data))
+	cipherStr := h.Sum(nil)
+	return hex.EncodeToString(cipherStr)
 }
