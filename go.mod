@@ -10,6 +10,7 @@ require (
 	github.com/gomodule/redigo v1.9.2
 	github.com/json-iterator/go v1.1.12
 	github.com/nats-io/nats.go v1.43.0
+	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/petermattis/goid v0.0.0-20250508124226-395b08cebbdb
 	github.com/rcrowley/go-metrics v0.0.0-20250401214520-65e299d6c5c9
 	github.com/redis/go-redis/v9 v9.11.0

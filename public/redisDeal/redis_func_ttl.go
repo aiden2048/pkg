@@ -18,6 +18,11 @@ func RedisSendTtl(key *redisKeys.RedisKeys, ttl int64) error {
 	return RedisSetTtl(key, ttl)
 }
 func RedisSetTtl(key *redisKeys.RedisKeys, ttl int64) error {
+	// 更新ttl缓存
+	if autoGetTtl(key, ttl, 60) == 0 {
+		// 减少操作频率
+		return nil
+	}
 	conn := GetRedisPool(key.Name)
 	return conn.Expire(context.TODO(), key.Key, time.Duration(ttl)*time.Second).Err()
 }
