@@ -149,7 +149,6 @@ func StartNatsService(cfg *NatsConfig) error {
 			oldNatsConn.Close()
 		}()
 	}
-
 	ReregistSubject()
 
 	time.Sleep(10 * time.Millisecond)

@@ -119,13 +119,8 @@ func GetNatsStreamKey(streamName, sub string) string {
 // PublishSub 按app_id推送就设置app_id 不分开推送设置 app_id=0
 func PublishSub(streamName, sub string, app_id int32, v any, sess *Session) error {
 
-	//err := PublishSubEx(streamName, sub, app_id, v, sess)
-	//if err != nil {
-	//	return err
-	//}
 	streamName = fmt.Sprintf("%d_%s", GetPlatformId(), streamName)
 	return PublishSubEx(streamName, sub, app_id, v, sess)
-	//return err
 }
 
 func PublishSubEx(streamName, sub string, app_id int32, v any, sess *Session) error {
