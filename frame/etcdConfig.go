@@ -4,7 +4,6 @@ import (
 	"log"
 	"os"
 	"sort"
-	"strings"
 
 	"github.com/aiden2048/pkg/frame/logs"
 
@@ -18,13 +17,7 @@ type etcdAddr struct {
 }
 
 type EtcdConfig struct {
-	//BasePath string
-
-	IpBlocks      []string // ip前缀
-	OnlyRpcx      bool
-	AllowConnCall []string
-	// NatsReg      bool
-	RegistAsHost bool //是否以host方式注册服务
+	IpBlocks []string // ip前缀
 
 	UpdateTime      int64 //服务上报更新时间间隔
 	XClientPoolSize int
@@ -63,7 +56,7 @@ func GetEtcdConfig() *EtcdConfig {
 func LoadEtcdConfig() error {
 	newConf := &EtcdConfig{}
 
-	fkey := "CenterEtcdConfig.toml"
+	fkey := "EtcdConfig.toml"
 	filename := "../GlobalConfig/" + fkey
 	_, err := toml.DecodeFile(filename, newConf)
 	if err != nil {
@@ -119,12 +112,6 @@ func CheckPrintRpcxErr(sname string) bool {
 	if GetServerName() != "conn" {
 		logs.Print("CheckPrintRpcxErr", GetServerName(), sname)
 		return true
-	}
-	for _, s := range etcdConfig.AllowConnCall {
-		if strings.Index(sname, s) >= 0 {
-			logs.Print("CheckPrintRpcxErr", GetServerName(), sname, etcdConfig.AllowConnCall)
-			return true
-		}
 	}
 	return false
 }

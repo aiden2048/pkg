@@ -1,7 +1,6 @@
 package frame
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -283,45 +282,6 @@ func LoadBootConfig() error {
 	return nil
 }
 
-func _loadFrameConfig() (*FrameConfig, error) {
-	newConf := NewDefaultFrameConfig()
-	sname := GetServerName()
-	filename := "../LocalConfig/frame.toml"
-	_, err := toml.DecodeFile(filename, newConf)
-	if err == nil {
-		logs.Infof("load LocalFile %s config: %+v", filename, newConf)
-		return newConf, err
-	}
-	if !os.IsNotExist(err) {
-		logs.Errorf("DecodeFile:%s failed:%s", filename, err.Error())
-	}
-
-	//===============从mysql读取==================
-	filename = fmt.Sprintf("frame_%s_%d.toml", sname, GetServerID())
-	err = LoadConfigFromMongo(filename, newConf)
-	if err == nil {
-		logs.Infof("load Mysql %s config: %+v", filename, newConf)
-		return newConf, err
-	}
-
-	filename = fmt.Sprintf("frame_%s.toml", sname)
-	err = LoadConfigFromMongo(filename, newConf)
-	if err == nil {
-		logs.Infof("load Mysql %s config: %+v", filename, newConf)
-		return newConf, err
-	}
-
-	filename = "frame.toml"
-	err = LoadConfigFromMongo(filename, newConf)
-	if err == nil {
-		logs.Infof("load Mysql %s config: %+v", filename, newConf)
-		return newConf, err
-	}
-	//err = errors.Errorf("no config for  %s_%d.toml", GetServerName(), GetServerID()))
-	logs.Infof("load Mysql %s failed: %+v", filename, err.Error())
-	return newConf, err
-}
-
 func LoadFrameConfig() error {
 	if !defFrameOption.DisableRpcx {
 		if err := LoadEtcdConfig(); err != nil {
@@ -329,7 +289,7 @@ func LoadFrameConfig() error {
 		}
 	}
 	logs.Infof("Read Etcd Config:%+v", etcdConfig)
-	newConf, _ := _loadFrameConfig()
+	newConf := NewDefaultFrameConfig()
 	//logs.Infof("Load Config:%+v from: %s", newConf, filename)
 	if newConf.RpcCallTimeout <= 0 {
 		newConf.RpcCallTimeout = DEFAULT_RPC_REQUEST_SECONDS
@@ -337,10 +297,10 @@ func LoadFrameConfig() error {
 
 	config = newConf
 
-	//logConf, err := _loadLogConfig()
-	//if err == nil && logConf != nil {
-	//	config.LogConf = logConf
-	//}
+	logConf, err := _loadLogConfig()
+	if err == nil && logConf != nil {
+		config.LogConf = logConf
+	}
 
 	LoadLogConfig(config.LogConf)
 
@@ -426,58 +386,4 @@ func LoadUinConfig(cfg *logger2.LogConf) error {
 	}
 
 	return nil
-}
-
-func LoadServerLocalConfig(newConf interface{}, args ...string) error {
-	if newConf == nil {
-		return errors.New("No Parameter")
-	}
-
-	sname := GetServerName()
-
-	filename := fmt.Sprintf("../LocalConfig/%s.toml", sname)
-	_, err := toml.DecodeFile(filename, newConf)
-	if err == nil {
-		logs.Infof("load LocalFile %s config: %+v", filename, newConf)
-		return err
-	}
-	if !os.IsNotExist(err) {
-		logs.Errorf("DecodeFile:%s failed:%s", filename, err.Error())
-	}
-
-	//===============从mysql读取==================
-	filename = fmt.Sprintf("%s_%d.toml", sname, GetServerID())
-	err = LoadConfigFromMongo(filename, newConf)
-	if err == nil {
-		logs.Infof("load Mysql %s config: %+v", filename, newConf)
-		return err
-	}
-
-	filename = fmt.Sprintf("%s.toml", sname)
-	err = LoadConfigFromMongo(filename, newConf)
-	if err == nil {
-		logs.Infof("load Mysql %s config: %+v", filename, newConf)
-		return err
-	}
-	if len(args) > 0 {
-		sname = args[0]
-		filename = fmt.Sprintf("%s.toml", sname)
-		err = LoadConfigFromMongo(filename, newConf)
-		if err == nil {
-			logs.Infof("load Mysql %s config: %+v", filename, newConf)
-			return err
-		}
-	}
-
-	//err = errors.Errorf("no config for  %s_%d.toml", GetServerName(), GetServerID()))
-	logs.Infof("load Mysql %s failed: %+v", filename, err.Error())
-	//logs.Infof("Load Config:%+v from: %s", newConf, filename)
-	//tempConfig := &BaseLocalConfig{}
-	//_, err = toml.DecodeFile(filename, tempConfig)
-	//if tempConfig.Log != nil {
-	//	logs.Infof("Load LogConfig OnApp:%+v", tempConfig.Log)
-	//	LoadLogConfig(tempConfig.Log)
-	//}
-
-	return err
 }

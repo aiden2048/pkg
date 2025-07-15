@@ -30,19 +30,15 @@ var _mix_mode = false
 var once = &sync.Once{}
 
 type FrameOption struct {
-	Port        int
-	Svrid       int  //-1000的时候,有系统根据服务器机器名编号
-	DisableNats bool // 禁用 nats
-	DisableRpcx bool //禁用rpcx
-	//DisableMysqlConfig bool //禁止从mysql读取toml配置
-	DisableMgo  bool //不启用Mgo
-	EnableMysql bool //不启用mysql
-	// EnableEsDB  bool //启用es数据库
-	//EnableTopNats   bool //启用topNats
+	Port             int
+	Svrid            int  //-1000的时候,有系统根据服务器机器名编号
+	DisableNats      bool // 禁用 nats
+	DisableRpcx      bool //禁用rpcx
+	DisableMgo       bool //不启用Mgo
+	EnableMysql      bool //不启用mysql
 	EnableMixServer  bool //是否开通大混服
 	EnableAllAreaMix bool // 是否允许在全区域通服(plat_id<1000)启动
 	EnableAppUid     bool //是否启用假ID
-	//UserZooKeeper   bool //是否启用假ID
 
 	XClientPoolSize  int
 	EventHandlerNum  int //监听事件通知起的线程数, 默认是0, 不限制

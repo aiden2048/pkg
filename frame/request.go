@@ -417,11 +417,7 @@ func (m *NatsMsg) ResponeSucc(rspparam interface{}) (err error) {
 
 // 加密方式回包
 func (m *NatsMsg) SendResponseEcrypt(errno int32, errstr string, rspparam interface{}) (err error) {
-	bb := false
-	if GetGlobalConfig().EcryptResponse || IsTestUid(m.GetUid()) {
-		bb = true
-	}
-	return m.response(errno, errstr, rspparam, bb)
+	return m.response(errno, errstr, rspparam, true)
 }
 
 func (m *NatsMsg) SendResponse(errno int32, errstr string, rspparam interface{}) (err error) {

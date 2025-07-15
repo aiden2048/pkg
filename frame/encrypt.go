@@ -22,24 +22,6 @@ const (
 	*/
 	AES_KEY = "1AiOOIBOBU2leghSWsRR50fVYEstyhM="
 	AES_IV  = "hceaV12V/+6K9ih6"
-
-	/**
-	对接外部钱包和三方游戏token验证使用的加密，不需要把秘钥给到任何人
-	*/
-	AES_KEY_FORWALLET = "TUTOZ3nsL2PD3UcW1iMHON2loYpsK545" // 钱包
-	AES_IV_FORWALLET  = "nTcpqxsTCjrYIQr1"                 // 钱包
-
-	/**
-	下发数据给客户端加密，需要同步给客户端 : 下发数据、手机号码加解密、data文件加密
-	*/
-	AES_KEY_FORCLIENT = "tx6pWYrj68vo1HctJZaC5D7j9pPAzfo=" // 客户端
-	AES_IV_FORCLIENT  = "RDlhO/GW+OWQULFm"                 // 客户端
-
-	/**
-	客户端POST数据加解密，需要同步给客户端: 客户端POST数据
-	*/
-	AES_KEY_FORROUTE = "k8453279789jhlouyuf2098767787277" // 路由
-	AES_IV_FORROUTE  = "kjuf20987hlouy67"                 // 路由
 )
 
 // 手机号加密key
@@ -48,34 +30,6 @@ var RSA_PHONE_PRI_KEY = []byte(`
 var RSA_PHONE_PUB_KEY = []byte(`
 
 `)
-
-func getAesClientKey() string {
-	if GetAesClientKey() != "" {
-		return GetAesClientKey()
-	}
-	return AES_KEY_FORCLIENT
-}
-
-func getAesClientIv() string {
-	if GetAesClientIv() != "" {
-		return GetAesClientIv()
-	}
-	return AES_IV_FORCLIENT
-}
-
-func getAesPostKey(ikey int) string {
-	if GetAesPostKey(ikey) != "" {
-		return GetAesPostKey(ikey)
-	}
-	return AES_KEY_FORROUTE
-}
-
-func getAesPostIv(ikey int) string {
-	if GetAesPostIv(ikey) != "" {
-		return GetAesPostIv(ikey)
-	}
-	return AES_IV_FORROUTE
-}
 
 // 10进制转任意进制
 func EncodeAppid(appid int32) string {
@@ -212,55 +166,6 @@ func Encrypt(str string) string {
 }
 func Decrypt(s string) string {
 	return DecryptStringByKey(s, AES_KEY, AES_IV, false)
-}
-
-// 客户端信息加密
-func EncryptForClientNoPadding(str string, key ...string) string {
-	k := getAesClientKey()
-	if len(key) > 0 && key[0] != "" {
-		k = key[0]
-	}
-	iv := getAesClientIv()
-	if len(key) > 1 && key[1] != "" {
-		iv = key[1]
-	}
-	return EncryptStringByKey(str, k, iv, false)
-}
-
-func EncryptForClientBytesNoPadding(s []byte) []byte {
-	return EncryptBytesByKey(s, getAesClientKey(), getAesClientIv(), false)
-}
-
-// 客户端信息解密
-func DecryptForClientNoPadding(str string, key ...string) string {
-	k := getAesClientKey()
-	if len(key) > 0 && key[0] != "" {
-		k = key[0]
-	}
-	iv := getAesClientIv()
-	if len(key) > 1 && key[1] != "" {
-		iv = key[1]
-	}
-	return DecryptStringByKey(str, k, iv, false)
-}
-
-func EncryptForClientPadding(str string) string {
-	return EncryptStringByKey(str, getAesClientKey(), getAesClientIv(), true)
-}
-
-func DecryptForClientPadding(str string) string {
-	return DecryptStringByKey(str, getAesClientKey(), getAesClientIv(), true)
-}
-
-// 注意, 这里用的是另外一个key
-func EncyptForClientNoPadding(ikey int, str string) string {
-	return EncryptStringByKey(str, getAesPostKey(ikey), getAesPostIv(ikey), true)
-}
-
-// 解密客户端加密的数据
-// 注意, 这里用的是另外一个key
-func DecryptClientBytes(ikey int, msg []byte) []byte {
-	return DecryptBytesByKey(msg, getAesPostKey(ikey), getAesPostIv(ikey), true)
 }
 
 func md5Sum(data string) string {
