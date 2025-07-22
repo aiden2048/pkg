@@ -11,7 +11,7 @@ import (
 
 type TGlobalConfig struct {
 	PlatformID      int32  //平台ID
-	EnableMixServer int32  //该组是否可以启用大通服
+	EnableMixServer bool   //该组是否可以启用大通服
 	MixSuffix       string //通服的分组前缀
 	IsTestServer    bool   //是否测试服
 }

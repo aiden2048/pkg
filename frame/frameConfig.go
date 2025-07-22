@@ -184,7 +184,7 @@ func InitConfig(svrName string, opt ...*FrameOption) error {
 		time.Sleep(sleepTime)
 		return err
 	}
-	if defFrameOption.EnableMixServer && GetGlobalConfig().EnableMixServer != 1 {
+	if defFrameOption.EnableMixServer && !GetGlobalConfig().EnableMixServer {
 		logs.Errorf("platid:%d 本组不能启用MixServer, 如需启用检查下Platform.tom配置,强制改成单组服务", GetPlatformId())
 		fmt.Printf("platid:%d 本组不能启用MixServer, 如需启用检查下Platform.tom配置,强制改成单组服务\n", GetPlatformId())
 		defFrameOption.EnableMixServer = false
