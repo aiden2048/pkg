@@ -98,14 +98,9 @@ func LoadNatsConfig() error {
 		if k.User == "" {
 			k.User = newConf.User
 		}
-		if k.User == "" {
-			k.User = "goapp"
-		}
+
 		if k.Password == "" {
 			k.Password = newConf.Password
-		}
-		if k.Password == "" {
-			k.Password = "Rx7mTNwgBW"
 		}
 
 		//newConf.mapNats[k.PlatId] = k
