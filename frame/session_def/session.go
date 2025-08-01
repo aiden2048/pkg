@@ -5,7 +5,7 @@ import "time"
 // 从登录态获取的信息
 type LoginInfo struct {
 	Idx        string `json:"idx,omitempty"`
-	PackNo     int32  `json:"PackNo,omitempty"` // 用户渠道号
+	ChannelNo  int32  `json:"ChannelNo,omitempty"` // 用户渠道号
 	LoginType  int32  `json:"utype"`
 	Os         int32  `json:"os"`          // 系统类型
 	AppType    int32  `json:"appType"`     // 应用类型
@@ -168,11 +168,11 @@ func (s *Session) GetPlatID() int32 {
 	}
 	return s.PlatId
 }
-func (s *Session) GetPackNo() int32 {
+func (s *Session) GetChannelNo() int32 {
 	if s == nil || s.LoginInfo == nil {
 		return 0
 	}
-	return s.LoginInfo.PackNo
+	return s.LoginInfo.ChannelNo
 }
 func (s *Session) GetRemoteAddr() string {
 	if s == nil {
