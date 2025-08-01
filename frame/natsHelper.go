@@ -293,11 +293,14 @@ func handlerNatsCmdBySname(sname, cmd string, handler func(context.Context, *Nat
 
 // 监听来自go-conn的请求
 func HandlerHttpCmd(cmd string, handler func(context.Context, *NatsMsg) int32, p2p ...bool) error {
-	return HandlerConnCmd("http", cmd, handler, p2p...)
+	return HandlerConnCmd(cmd, handler, p2p...)
+}
+func GetConnSubName() string {
+	return fmt.Sprintf("http.%s", GetServerName())
 }
 
 // 监听来自go-conn.xxx的请求
-func HandlerConnCmd(subName string, cmd string, handler func(context.Context, *NatsMsg) int32, p2p ...bool) error {
+func HandlerConnCmd(cmd string, handler func(context.Context, *NatsMsg) int32, p2p ...bool) error {
 	needP2p := true
 	if len(p2p) > 0 {
 		needP2p = p2p[0]
@@ -306,15 +309,15 @@ func HandlerConnCmd(subName string, cmd string, handler func(context.Context, *N
 		needP2p = true
 	}
 	if IsDebug() && !strings.HasPrefix(cmd, "NA.") {
-		_ = HandlerConnCmdByServerName(subName, GetServerName(), "NA."+cmd, handler, needP2p)
+		_ = HandlerConnCmdByServerName("NA."+cmd, handler, needP2p)
 	}
-	return HandlerConnCmdByServerName(subName, GetServerName(), cmd, handler, needP2p)
+	return HandlerConnCmdByServerName(cmd, handler, needP2p)
 }
 
 // 监听来自go-conn.xxx的请求, 指定自己的servername
-func HandlerConnCmdByServerName(subName string, serverName string, cmd string, handler func(context.Context, *NatsMsg) int32, needP2p bool /*, tnums ...int*/) error {
+func HandlerConnCmdByServerName(cmd string, handler func(context.Context, *NatsMsg) int32, needP2p bool /*, tnums ...int*/) error {
 
-	httpMod := fmt.Sprintf("http_%s.%s", subName, serverName)
+	httpMod := GetConnSubName()
 	//添加rpcx注册
 	if err := RegisterRpcxHandlerBySName(httpMod, cmd, handler, needP2p); err != nil {
 		return err
@@ -332,7 +335,7 @@ func NotifyStopService(serverName string, serverId int32, obj interface{}) {
 // 注册可以不校验登录态的接口
 func HandlerHttpCmdNoAuth(cmd string, handler func(ctx context.Context, msg *NatsMsg) int32, p2p ...bool) error {
 	cmd = "NA." + cmd
-	return HandlerConnCmd("http", cmd, handler, p2p...)
+	return HandlerConnCmd(cmd, handler, p2p...)
 }
 
 // 通服
