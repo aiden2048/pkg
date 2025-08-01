@@ -40,7 +40,7 @@ type LoginInfo = session_def.LoginInfo
 		SessionID  int64  `json:"SessionID,omitempty"`
 		PriKey     string `json:"PriKey,omitempty"`
 		AppID      int32  `json:"AppID,omitempty"`
-		PackNo     int32  `json:"PackNo,omitempty"` // 用户渠道号
+		ChannelGetChannelNo     int32  `json:"ChannelGetChannelNo,omitempty"` // 用户渠道号
 		LoginType  int32  `json:"utype"`
 		LoginAddr  string `json:"LoginAddr"`            //登录的ip
 		RemoteAddr string `json:"RemoteAddr,omitempty"` //当前访问ip
@@ -262,11 +262,11 @@ func (m *NatsMsg) GetExtValue() int32 {
 	}
 	return m.ExtValue
 }
-func (m *NatsMsg) GetPackNo() int32 {
+func (m *NatsMsg) GetChannelNo() int32 {
 	if m == nil {
 		return 0
 	}
-	return m.GetSession().GetPackNo()
+	return m.GetSession().GetChannelNo()
 }
 
 func (m *NatsMsg) GetMod() string {
@@ -662,8 +662,8 @@ func (handler *BaseHandler) GetAppID() int32 {
 func (handler *BaseHandler) GetUid() uint64 {
 	return handler.req.GetUid()
 }
-func (handler *BaseHandler) GetPackNo() int32 {
-	return handler.req.GetPackNo()
+func (handler *BaseHandler) GetChannelNo() int32 {
+	return handler.req.GetChannelNo()
 }
 
 func (handler *BaseHandler) GetUserLang() int32 {
