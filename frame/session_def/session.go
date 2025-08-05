@@ -48,7 +48,7 @@ type STrace struct {
 type Session struct {
 	Uid     uint64 `json:"Uid,omitempty"`
 	AppId   int32  `json:"AppID,omitempty"`
-	Lang    int32  `json:"lang,omitempty"`
+	Lang    string `json:"lang,omitempty"`
 	Os      int32  `json:"os"`
 	PlatId  int32  `json:"PlatID,omitempty"`
 	SvrFE   string `json:"SvrFE,omitempty"`
@@ -125,9 +125,9 @@ func (s *Session) GetUid() uint64 {
 	}
 	return s.Uid
 }
-func (s *Session) GetLang() int32 {
+func (s *Session) GetLang() string {
 	if s == nil {
-		return 0
+		return "en_US"
 	}
 	return s.Lang
 }

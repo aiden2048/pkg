@@ -238,9 +238,9 @@ func (m *NatsMsg) GetUid() uint64 {
 	}
 	return uint64(m.Sess.GetUid())
 }
-func (m *NatsMsg) GetLang() int32 {
+func (m *NatsMsg) GetLang() string {
 	if m == nil {
-		return 0
+		return "en_US"
 	}
 	return m.Sess.GetLang()
 }
@@ -666,6 +666,6 @@ func (handler *BaseHandler) GetChannelNo() int32 {
 	return handler.req.GetChannelNo()
 }
 
-func (handler *BaseHandler) GetUserLang() int32 {
+func (handler *BaseHandler) GetUserLang() string {
 	return handler.req.GetLang()
 }
