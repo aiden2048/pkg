@@ -69,11 +69,11 @@ func SendMsgToClient(sess *Session, errno int32, errstr string, f string, msgPar
 	if sess.RpcType == "nats" {
 		toNats = 1
 	}
-	return NatsSend(sess.GetServerFE(), sess.GetServerID(), "p2p", &rspmsg, sess.GetPlatID(), int32(toNats))
+	return RpcxSend(sess.GetServerFE(), sess.GetServerID(), "p2p", &rspmsg, sess.GetPlatID(), int32(toNats))
 }
 
 // 只发送不等回包
-func NatsSend(mod string, svrid int32, cmd string, req *NatsMsg, pids ...int32) (err *errorMsg.ErrRsp) {
+func RpcxSend(mod string, svrid int32, cmd string, req *NatsMsg, pids ...int32) (err *errorMsg.ErrRsp) {
 	req.Sess.PlatId = GetPlatformId()
 	req.Sess.SvrFE = GetServerName()
 	req.Sess.SvrID = GetServerID()
@@ -85,25 +85,12 @@ func NatsSend(mod string, svrid int32, cmd string, req *NatsMsg, pids ...int32) 
 	if len(pids) > 0 {
 		platId = pids[0]
 	}
-	// toNats := 0
-	// if len(pids) > 1 {
-	// 	toNats = int(pids[1])
-	// }
-	//检查通过rpcx请求
-	if /*toNats == 0 &&*/ CheckRpcxService(platId, mod, svrid, cmd) {
-		req.Sess.RpcType = "rpcx"
-		e := SendRpcx(req.GetUid(), platId, mod, cmd, svrid, req)
-		if etcdConfig.IsRpcxOnly() || e.ErrorNo() != errorMsg.NoService.ErrorNo() {
-			return e
-		}
+
+	if !CheckRpcxService(platId, mod, svrid, cmd) {
+		return errorMsg.NoService.Line()
 	}
-	//正常nats请求
-
-	//	req.Sess.Route = fmt.Sprint("%s->%s.%d", req.Sess.Route, GetServerName(), GetServerID())
-	subj := GenReqSubject(mod, cmd, svrid)
-	req.Sess.RpcType = "nats"
-
-	return NatsPublish(getMixNatsConn(platId), subj, req, false, GetCheckFunc(platId))
+	req.Sess.RpcType = "rpcx"
+	return SendRpcx(req.GetUid(), platId, mod, cmd, svrid, req)
 }
 
 // 推送消息至客户端

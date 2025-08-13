@@ -148,7 +148,7 @@ func Request[T any, H any](group, funcName string, req_param *T, needRsp bool, p
 		return nil, errorMsg.RspError.Copy(err)
 	}
 	if needRsp { //需要返回
-		rsp, errs := frame.NatsCall(group, svrId, funcName, &req, timeout, platId)
+		rsp, errs := frame.RpcxCall(group, svrId, funcName, &req, timeout, platId)
 		if errs != nil {
 			logs.Errorf("%s->%s failed:%v", group, funcName, errs)
 			return nil, errs
@@ -167,7 +167,7 @@ func Request[T any, H any](group, funcName string, req_param *T, needRsp bool, p
 		return rsppara, nil
 	} else {
 		req.Sess.Channel = 0
-		err := frame.NatsSend(group, svrId, funcName, &req, platId)
+		err := frame.RpcxSend(group, svrId, funcName, &req, platId)
 		if err != nil {
 			logs.Errorf("%s->%s failed:%s", group, funcName, err)
 			return nil, errorMsg.RspError.Copy(err)
@@ -210,7 +210,7 @@ func RequestWithSess[T any, H any](sess *frame.Session, group, funcName string, 
 		return nil, errorMsg.RspError.Copy(err)
 	}
 	if needRsp { //需要返回
-		rsp, errs := frame.NatsCall(group, svrId, funcName, &req, timeout, platId)
+		rsp, errs := frame.RpcxCall(group, svrId, funcName, &req, timeout, platId)
 		var respBody frame.MsgBody
 		if rsp != nil {
 			respBody = rsp.MsgBody
@@ -238,7 +238,7 @@ func RequestWithSess[T any, H any](sess *frame.Session, group, funcName string, 
 		return rsppara, nil
 	} else {
 		req.Sess.Channel = 0
-		errs := frame.NatsSend(group, svrId, funcName, &req, platId)
+		errs := frame.RpcxSend(group, svrId, funcName, &req, platId)
 		logs.PrintInfo("rpc-send", group, svrId, funcName, &req, timeout, platId, "err", errs)
 		if errs != nil {
 			//logs.Errorf("%s->%s failed:%s", group, funcName, err)
@@ -247,88 +247,3 @@ func RequestWithSess[T any, H any](sess *frame.Session, group, funcName string, 
 		return nil, nil
 	}
 }
-
-/*
-func RequestFromTop[T any, H any](group, funcName string, req_param *T, needRsp bool, pids []int32) (rsppara *H, erro *errorMsg.ErrRsp) {
-	platId := int32(0)
-	if len(pids) == 0 {
-		return nil, errorMsg.RspError
-	}
-	platId = pids[0]
-	req := frame.NatsMsg{Sess: *frame.NewSessionOnly()}
-
-	req.MsgBody.Func = funcName
-	var err error
-	req.MsgBody.Param, err = jsoniter.Marshal(&req_param)
-	if err != nil {
-		logs.Errorf("%s->%s failed:%s", group, funcName, err)
-		return nil, errorMsg.RspError.Copy(err)
-	}
-	if needRsp { //需要返回
-		rsp, err := frame.TopCallToPlat(platId, group, -1, funcName, &req, frame.GetCallTimeout())
-		if err != nil {
-			logs.Errorf("%s->%s failed:%s", group, funcName, err)
-			return nil, errorMsg.RspError.Copy(err)
-		}
-		if rsp.GetMsgErrNo() != 0 {
-			parmars := []any{}
-			jsoniter.Unmarshal(rsp.GetParam(), &parmars)
-			return nil, errorMsg.New(rsp.GetMsgErrNo(), "", parmars...).Return(rsp.GetMsgErrStr())
-		}
-		rsppara = new(H)
-		err = jsoniter.Unmarshal(rsp.GetParam(), &rsppara)
-		if err != nil {
-			logs.PrintErr("RequestFromTop", group, funcName, "respone from", rsp.Sess, "err:", err, "Unmarshal", rsp.GetParam())
-			return nil, errorMsg.RspError.Copy(err)
-		}
-		return rsppara, nil
-	} else {
-		err := frame.TopSendToPlat(platId, group, -1, funcName, &req)
-		if err != nil {
-			logs.Errorf("%s->%s failed:%s", group, funcName, err)
-			return nil, errorMsg.RspError.Copy(err)
-		}
-		return nil, nil
-	}
-}
-
-// 调用top接口
-func RequestToTop[T any, H any](group, funcName string, req_param *T, needRsp bool, pids []int32) (rsppara *H, erro *errorMsg.ErrRsp) {
-	req := frame.NatsMsg{Sess: *frame.NewSessionOnly()}
-
-	req.MsgBody.Func = funcName
-	var err error
-	req.MsgBody.Param, err = jsoniter.Marshal(&req_param)
-	if err != nil {
-		logs.Errorf("%s->%s failed:%s", group, funcName, err)
-		return nil, errorMsg.RspError.Copy(err)
-	}
-	if needRsp { //需要返回
-		rsp, err := frame.TopNatsCall(group, -1, funcName, &req, frame.GetCallTimeout())
-		if err != nil {
-			logs.Errorf("%s->%s failed:%s", group, funcName, err)
-			return nil, errorMsg.RspError.Copy(err)
-		}
-		if rsp.GetMsgErrNo() != 0 {
-			parmars := []any{}
-			jsoniter.Unmarshal(rsp.GetParam(), &parmars)
-			return nil, errorMsg.New(rsp.GetMsgErrNo(), "", parmars...).Return(rsp.GetMsgErrStr())
-		}
-		rsppara = new(H)
-		err = jsoniter.Unmarshal(rsp.GetParam(), &rsppara)
-		if err != nil {
-			logs.PrintErr("RequestToTop", group, funcName, "respone from", rsp.Sess, "err:", err, "Unmarshal", rsp.GetParam())
-
-			return nil, errorMsg.RspError.Copy(err)
-		}
-		return rsppara, nil
-	} else {
-		err := frame.TopNatsSend(group, -1, funcName, &req)
-		if err != nil {
-			logs.Errorf("%s->%s failed:%s", group, funcName, err)
-			return nil, errorMsg.RspError.Copy(err)
-		}
-		return nil, nil
-	}
-}
-*/

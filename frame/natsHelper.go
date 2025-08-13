@@ -84,7 +84,7 @@ func GenRspSubject(svrName string, svrID int32, channel uint64) string {
 }
 
 // 远程调用并且回包
-func NatsCall(mod string, svrid int32, cmd string, req *NatsMsg, args ...int32) (*NatsMsg, *errorMsg.ErrRsp) {
+func RpcxCall(mod string, svrid int32, cmd string, req *NatsMsg, args ...int32) (*NatsMsg, *errorMsg.ErrRsp) {
 	req.Sess.PlatId = GetPlatformId()
 
 	req.Sess.SvrFE = GetServerName()
@@ -164,30 +164,10 @@ func NatsCallForTrans(mod string, svrid int32, cmd string, req *NatsMsg, args ..
 		platId = args[1]
 	}
 	//检查通过rpcx请求
-	if CheckRpcxService(platId, mod, svrid, cmd) {
-		// return CallRpcxForTrans(platId, &req.Sess, mod, cmd, svrid, req, timeout)
-		m, e := CallRpcxForTrans(platId, &req.Sess, mod, cmd, svrid, req, timeout)
-		if etcdConfig.IsRpcxOnly() || e.ErrorNo() != errorMsg.NoService.ErrorNo() {
-			return m, e
-		}
+	if !CheckRpcxService(platId, mod, svrid, cmd) {
+		return nil, errorMsg.NoService.Line()
 	}
-	if req.Sess.RpcType == "" {
-		req.Sess.RpcType = "nats"
-	}
-	//正常nats请求
-	nats := getMixNatsConn(platId)
-	msg, err := NatsCallMsg(nats, mod, svrid, cmd, req, timeout, GetCheckFunc(platId))
-	if err != nil {
-		return nil, err
-	}
-	rsp = &NatsTransMsg{}
-	errs := jsoniter.Unmarshal(msg.Data, rsp)
-	if errs != nil {
-		logs.Errorf("NatsCall %s.%s Unmarshal rsp %s failed:%s", mod, cmd, string(msg.Data[:]), err.Error())
-		//ret = ESMR_FAILED
-		return nil, errorMsg.RspError.Copy(errs)
-	}
-	return rsp, nil
+	return CallRpcxForTrans(platId, &req.Sess, mod, cmd, svrid, req, timeout)
 }
 
 func NatsCallTrans(mod string, svrid int32, cmd string, req *NatsTransMsg, args ...int32) (*NatsTransMsg, *errorMsg.ErrRsp) {

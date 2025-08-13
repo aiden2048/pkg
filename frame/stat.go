@@ -32,32 +32,6 @@ func ReportStat(object string, funcName string, result int, processTime time.Dur
 	stat.ReportStat(key, int(result), processTime)
 }
 
-/*
-func statisicDataReport(req *monitor.StatisticReqMsgPara) (*monitor.StatisticRspMsgPara, error) {
-b := &msg.PbMsg{req}
-	// SendAndRecv
-	session := NewEmptySession()
-	rpc := NewRpc(session)
-	rsp, err := rpc.NatsCall(session.GetUin(), "monitor", "StatisicDataReport", rb, 2)
-	if err != nil {
-		logs.Infof("monitor StatisicDataReport failed:%s", err)
-		return nil, errors.New("NatsCall Error")
-	}
-	// 转成PbMsg
-	if rsp, ok := rsp.(*msg.PbMsg); ok {
-		// 得到PbMsg里的Pb结构
-		if pb, ok := rsp.Pb.(*monitor.StatisticRspMsgPara); ok {
-			return pb, nil
-		} else {
-			return nil, errors.New("Rsp Error") //
-		}
-	} else {
-		logs.Infof("Recv Error Msg")
-		return nil, errors.New("Rsp Error") //
-	}
-}
-*/
-
 func additionalMsgStat(key string, value *stat.MsgStatData, avgProcessTime time.Duration, avgSuccProcessTime time.Duration) {
 	if GetNatsConn() == nil {
 		logs.Importantf("nats 还没起来， 不能上报")
