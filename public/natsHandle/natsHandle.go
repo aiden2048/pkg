@@ -25,17 +25,14 @@ func HandleLogic[R any, T any](r *frame.NatsMsg, logic func(req *R) (resp *T, er
 
 	_err := jsoniter.Unmarshal(r.GetParam(), &req)
 	if _err != nil {
+		logs.Errorf("HandleLogic is err:%+v,r.GetParam:%+v", _err, r.GetParam())
 		err := errorMsg.ReqParamError.Return("GetParam")
-		//errstr := err.ErrorStr()
-		//if r.GetSession().SvrFE != "conn" {
-		//	errstr = err.Error()
-		//}
 		r.SendResponse(err.ErrorNo(), err.ErrorStr(), err.Params)
 		return frame.ESMR_FAILED
 	}
 
 	if len(chkSess) > 0 && chkSess[0] && (r.GetSession().GetAppID() <= 0 || r.GetUid() <= 0) && !strings.HasPrefix(r.GetFunc(), "NA.") {
-		logs.PrintErr("请求没有初始化Session信息, 检查调用者代码:", r.GetSession(), "func", r.GetMod(), r.GetFunc(), "check", r.GetCheck())
+		logs.Errorf("请求没有初始化Session信息, 检查调用者代码:", r.GetSession(), "func", r.GetMod(), r.GetFunc(), "check", r.GetCheck())
 	}
 	needLog := !strings.HasPrefix(r.GetFunc(), "DoCode")
 	if needLog {
