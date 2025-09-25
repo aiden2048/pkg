@@ -107,9 +107,12 @@ func RpcxCall(mod string, svrid int32, cmd string, req *NatsMsg, args ...int32) 
 		xtime := args[0]
 		timeout = time.Duration(xtime) * time.Second
 	}
-	platId := GetPlatformId()
+	platId := int32(0)
 	if len(args) > 1 {
 		platId = args[1]
+	}
+	if platId <= 0 {
+		platId = GetPlatformId()
 	}
 	//检查通过rpcx请求
 	if CheckRpcxService(platId, mod, svrid, cmd) {
