@@ -132,7 +132,7 @@ type MsgBody struct {
 	Type      string `json:"_type,omitempty"`
 	SvrT      string `json:"_svr_t,omitempty"`
 	SvrID     int32  `json:"_svr_id,omitempty"`
-	ErrNo     int32  `json:"_errno,omitempty"`  // 错误码
+	ErrNo     int32  `json:"_errno"`            // 错误码
 	ErrStr    string `json:"_errstr,omitempty"` // 错误内容
 	PopupNo   int32  `json:"_popno,omitempty"`  // 弹窗样式
 	PopupJump int32  `json:"_popjp,omitempty"`  // 弹窗跳转
