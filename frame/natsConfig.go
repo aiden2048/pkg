@@ -110,19 +110,19 @@ func LoadNatsConfig() error {
 		}
 	}
 
-	// if newConf.GetNatsConfig(0) != nil {
-	// 	if GetNatsConn() == nil || !checkNatsConfigEqual(natsConfig.GetNatsConfig(0), newConf.GetNatsConfig(0)) {
-	// 		if err := StartNatsService(newConf.GetNatsConfig(0)); err == nil {
-	// 			logs.Infof("Save Nats Config:%+v", newConf.GetNatsConfig(0))
-	// 		} else {
-	// 			logs.Errorf("Start NatsService Failed:%s", err.Error())
-	// 			logs.Infof("New Nats Config:%+v can not be connected, keep config:%+v", newConf.GetNatsConfig(0), natsConfig.GetNatsConfig(0))
-	// 			return err
-	// 		}
-	// 	}
-	// } else {
-	// 	logs.Print("plat", GetPlatformId(), "本组 没有配置Nats,++++++++++++++++++")
-	// }
+	if newConf.GetNatsConfig(0) != nil {
+		if GetNatsConn() == nil || !checkNatsConfigEqual(natsConfig.GetNatsConfig(0), newConf.GetNatsConfig(0)) {
+			if err := StartNatsService(newConf.GetNatsConfig(0)); err == nil {
+				logs.Infof("Save Nats Config:%+v", newConf.GetNatsConfig(0))
+			} else {
+				logs.Errorf("Start NatsService Failed:%s", err.Error())
+				logs.Infof("New Nats Config:%+v can not be connected, keep config:%+v", newConf.GetNatsConfig(0), natsConfig.GetNatsConfig(0))
+				return err
+			}
+		}
+	} else {
+		logs.Print("plat", GetPlatformId(), "本组 没有配置Nats,++++++++++++++++++")
+	}
 
 	//if defFrameOption.EnableMixServer {
 	//	logs.Print("本进程启用互通模式,需要链接其他的 mapNats:", newConf.mapNats)
