@@ -6,8 +6,8 @@ import (
 	"github.com/aiden2048/pkg/public/redisKeys"
 )
 
-func InEcsKey(key string) bool {
-	if strings.Index(key, "ecs.") != 0 && strings.Index(key, "money.") != 0 {
+func InMoneyKey(key string) bool {
+	if strings.Index(key, "money.") != 0 {
 		return false
 	}
 	return true
@@ -25,8 +25,8 @@ func check(key *redisKeys.RedisKeys) bool {
 		return redisKeys.InSessKey(key.Key)
 	case REDIS_INDEX_USER: //user
 		return redisKeys.InUserKey(key.Key)
-	case REDIS_INDEX_ECS: //ecs
-		return InEcsKey(key.Key)
+	case REDIS_INDEX_Money: //money
+		return InMoneyKey(key.Key)
 	case REDIS_INDEX_PAY: //pay
 		return redisKeys.InPayKey(key.Key)
 	case REDIS_INDEX_RISK: //risk

@@ -19,7 +19,7 @@ var bIsLoad = false
 
 const (
 	REDIS_INDEX_COMMON     = "default"
-	REDIS_INDEX_ECS        = "ecs"
+	REDIS_INDEX_Money      = "money"
 	REDIS_INDEX_USER       = "user"
 	REDIS_INDEX_SESSION    = "session"
 	REDIS_INDEX_RISK       = "risk"
@@ -124,13 +124,13 @@ func StartRedis(idleCount ...int) error {
 	return OpenRedis(REDIS_INDEX_COMMON, c)
 }
 
-// ecs
-func StartEcsRedis(idleCount ...int) error {
+// Money
+func StartMoneyRedis(idleCount ...int) error {
 	c := 256
 	if len(idleCount) > 0 {
 		c = idleCount[0]
 	}
-	return OpenRedis(REDIS_INDEX_ECS, c)
+	return OpenRedis(REDIS_INDEX_Money, c)
 }
 
 // user
@@ -208,8 +208,8 @@ func GetRedisPool(sec ...string) redis.UniversalClient {
 
 }
 
-func GetEcsRedisPool() redis.UniversalClient {
-	return GetRedisPool(REDIS_INDEX_ECS)
+func GetMoneyRedisPool() redis.UniversalClient {
+	return GetRedisPool(REDIS_INDEX_Money)
 }
 
 func GetUserRedisPool() redis.UniversalClient {

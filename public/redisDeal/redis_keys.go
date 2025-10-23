@@ -13,9 +13,9 @@ func GenCommonRedisKey(format string, a ...any) *redisKeys.RedisKeys {
 	return k
 }
 
-func GenEcsRedisKey(format string, a ...any) *redisKeys.RedisKeys {
+func GenMoneyRedisKey(format string, a ...any) *redisKeys.RedisKeys {
 	k := &redisKeys.RedisKeys{}
-	k.Name = REDIS_INDEX_ECS
+	k.Name = REDIS_INDEX_Money
 	k.Key = fmt.Sprintf(k.Name+"."+format, a...)
 	return k
 }
