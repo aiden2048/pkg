@@ -162,11 +162,9 @@ func initRpcxServer() error {
 		log.Panicf("获取本机地址失败: %s", err.Error())
 		return err
 	}
-	//port = 20000
 	address = mnet.HostPort(host, port)
 	listener, err = net.Listen("tcp", address)
 	logs.Importantf("Listen RpcxServer at: %s, err: %+v", address, err)
-	//if port == defaultPort {
 	for i := 1; i < 10; i++ {
 		if err == nil {
 			break
@@ -176,7 +174,6 @@ func initRpcxServer() error {
 		listener, err = net.Listen("tcp", address)
 		logs.Importantf("Listen RpcxServer at: %s, err: %+v", address, err)
 	}
-	//}
 	if err != nil {
 		logs.Errorf("Start rpcx MakeListener:%s failed:%s", address, err.Error())
 		log.Panicf("Start rpcx MakeListener:%s failed:%s", address, err.Error())
