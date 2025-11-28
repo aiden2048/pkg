@@ -138,7 +138,7 @@ func (r *RedisElect) Run() {
 				continue
 			}
 
-			err := redisDeal.RedisSetTtl(r.clusterKey, 10)
+			err := redisDeal.RedisSetTtl(r.clusterKey, 12)
 			if err != nil {
 				logs.Errorf("err:%v", err)
 				continue

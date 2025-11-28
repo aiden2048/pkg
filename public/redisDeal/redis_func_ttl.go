@@ -19,7 +19,7 @@ func RedisSendTtl(key *redisKeys.RedisKeys, ttl int64) error {
 }
 func RedisSetTtl(key *redisKeys.RedisKeys, ttl int64) error {
 	// 更新ttl缓存
-	if autoGetTtl(key, ttl, 60) == 0 {
+	if autoGetTtl(key, ttl, 10) == 0 {
 		// 减少操作频率
 		return nil
 	}
