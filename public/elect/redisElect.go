@@ -78,7 +78,7 @@ func (r *RedisElect) Run() {
 			if !r.isMaster {
 
 				succ := redisDeal.RedisDoSetnx(r.clusterKey, fmt.Sprintf("%d:%s", time.Now().Unix(), r.nodeId), 15)
-
+				logs.Debugf("elect redis setnx key:%s succ:%d", r.clusterKey.Key, succ)
 				if succ == 0 {
 
 					ttl, err := redisDeal.RedisGetTtl(r.clusterKey)
@@ -126,6 +126,7 @@ func (r *RedisElect) Run() {
 			}
 
 			if r.getNodeIdFromRedis() != r.nodeId {
+				logs.Debugf("elect redis setnx key:%s nodeId:%s r.nodeId:%s", r.clusterKey.Key, r.getNodeIdFromRedis(), r.nodeId)
 				r.isMaster = false
 				continue
 			}
@@ -133,11 +134,6 @@ func (r *RedisElect) Run() {
 			err := redisDeal.RedisSetTtl(r.clusterKey, 10)
 			if err != nil {
 				logs.Errorf("err:%v", err)
-				continue
-			}
-
-			if r.getNodeIdFromRedis() != r.nodeId {
-				r.isMaster = false
 				continue
 			}
 		}
