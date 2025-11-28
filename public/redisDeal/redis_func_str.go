@@ -178,8 +178,8 @@ func RedisDoSetnx(key *redisKeys.RedisKeys, data interface{}, ttl int64) int {
 		return 0
 	}
 	// 如果设置成功，设置 TTL
-	RedisSetTtl(key, ttl)
 	if ret {
+		RedisSetTtl(key, ttl)
 		return 1
 	}
 

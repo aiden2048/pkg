@@ -86,10 +86,10 @@ func (r *RedisElect) Run() {
 						logs.Errorf("err:%v", err)
 						continue
 					}
-
+					logs.Debugf("elect redis setnx key:%s ttl:%d", r.clusterKey.Key, ttl)
 					// 有可能上次进程退出时候还没来的及设置expire就退出了
 					if ttl == -1 || ttl > 60 {
-						logs.Debugf("elect redis setnx key:%s ttl:%d", r.clusterKey.Key, ttl)
+
 						if ttl == -1 {
 							if err = redisDeal.RedisDoDel(r.clusterKey); err != nil {
 								logs.Errorf("err:%v", err)
@@ -99,13 +99,18 @@ func (r *RedisElect) Run() {
 						val := redisDeal.RedisDoGetStr(r.clusterKey)
 						info := strings.SplitN(val, ":", 2)
 						if len(info) < 2 {
+							if err = redisDeal.RedisDoDel(r.clusterKey); err != nil {
+								logs.Errorf("err:%v", err)
+							}
 							continue
 						}
 
 						lastSuccAtStr := info[0]
 						lastSuccAt, err := strconv.ParseInt(lastSuccAtStr, 10, 64)
 						if err != nil {
-							logs.Errorf("err:%v", err)
+							if err = redisDeal.RedisDoDel(r.clusterKey); err != nil {
+								logs.Errorf("err:%v", err)
+							}
 							continue
 						}
 
