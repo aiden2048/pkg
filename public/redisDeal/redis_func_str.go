@@ -177,10 +177,9 @@ func RedisDoSetnx(key *redisKeys.RedisKeys, data interface{}, ttl int64) int {
 		logs.Errorf("RedisDoSetnx key:%s, err:%+v", key.Key, err)
 		return 0
 	}
-
 	// 如果设置成功，设置 TTL
+	RedisSetTtl(key, ttl)
 	if ret {
-		_ = RedisSetTtl(key, ttl) // 错误处理通过 _ 忽略
 		return 1
 	}
 

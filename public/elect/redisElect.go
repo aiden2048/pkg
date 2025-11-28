@@ -78,7 +78,7 @@ func (r *RedisElect) Run() {
 			if !r.isMaster {
 
 				succ := redisDeal.RedisDoSetnx(r.clusterKey, fmt.Sprintf("%d:%s", time.Now().Unix(), r.nodeId), 15)
-				logs.Debugf("elect redis setnx key:%s succ:%d", r.clusterKey.Key, succ)
+
 				if succ == 0 {
 
 					ttl, err := redisDeal.RedisGetTtl(r.clusterKey)
@@ -89,6 +89,13 @@ func (r *RedisElect) Run() {
 
 					// 有可能上次进程退出时候还没来的及设置expire就退出了
 					if ttl == -1 || ttl > 60 {
+						logs.Debugf("elect redis setnx key:%s ttl:%d", r.clusterKey.Key, ttl)
+						if ttl == -1 {
+							if err = redisDeal.RedisDoDel(r.clusterKey); err != nil {
+								logs.Errorf("err:%v", err)
+								continue
+							}
+						}
 						val := redisDeal.RedisDoGetStr(r.clusterKey)
 						info := strings.SplitN(val, ":", 2)
 						if len(info) < 2 {
