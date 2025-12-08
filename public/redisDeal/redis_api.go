@@ -27,18 +27,18 @@ func RedisConnDo(key *redisKeys.RedisKeys, conn *redis.ClusterClient, commandNam
 	logRedisCommand(commandName, err, args...)
 
 	duration := time.Since(start)
-	reportRedisStats(key.Name, commandName, err != nil, duration)
+	reportRedisStats(key.Name, commandName, err != nil && err != redis.Nil, duration)
 
 	return cmd, err
 }
 func logRedisCommand(command string, err error, args ...interface{}) {
-	if err != nil {
+	if err != nil && err != redis.Nil {
 		logs.Errorf("redis:%s, args:%+v, err:%v", command, args, err)
 	}
 	if command == "EXPIRE" {
 		logs.Debugf("redis:%s, args:%+v, err:%v", command, args, err)
 	} else {
-		logs.Infof("redis:%s, args:%+v, err:%v", command, args, err)
+		logs.Debugf("redis:%s, args:%+v, err:%v", command, args, err)
 	}
 }
 func reportRedisStats(redisName, command string, isError bool, duration time.Duration) {
