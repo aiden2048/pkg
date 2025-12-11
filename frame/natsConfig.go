@@ -73,7 +73,7 @@ func LoadNatsConfig() error {
 	newConf := &AllNatsConfig{}
 
 	fkey := "NatsConfig.toml"
-	filename := "../GlobalConfig/" + fkey
+	filename := GetGlobalConfigDir() + fkey
 	_, err := toml.DecodeFile(filename, newConf)
 	if err != nil {
 		if !os.IsNotExist(err) {

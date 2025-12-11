@@ -237,7 +237,7 @@ func InitConfig(svrName string, opt ...*FrameOption) error {
 func LoadPlatConfig() error {
 	newConf := &TGlobalConfig{}
 	fkey := "Platform.toml"
-	filename := "../GlobalConfig/" + fkey
+	filename := GetGlobalConfigDir() + fkey
 	_, err := toml.DecodeFile(filename, newConf)
 	if err != nil {
 		log.Printf("LoadPlatConfig DecodeFile:%s failed:%s", fkey, err.Error())

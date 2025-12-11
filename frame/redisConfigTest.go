@@ -49,7 +49,7 @@ func LoadRedisConfig2() (error, map[string]bool) {
 
 	newConf := &RedisCfg2{}
 	fkey := "RedisConfig.toml"
-	filename := "../GlobalConfig/" + fkey
+	filename := GetGlobalConfigDir() + fkey
 	_, err := toml.DecodeFile(filename, newConf)
 	if err != nil {
 		if !os.IsNotExist(err) {

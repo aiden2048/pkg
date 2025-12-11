@@ -25,7 +25,7 @@ func GetGlobalConfig() *TGlobalConfig {
 func LoadGlobalConfig() error {
 	newConf := &TGlobalConfig{}
 	fkey := "GlobalConfig.toml"
-	filename := "../GlobalConfig/" + fkey
+	filename := GetGlobalConfigDir() + fkey
 	_, err := toml.DecodeFile(filename, newConf)
 	if err != nil {
 		if !os.IsNotExist(err) {

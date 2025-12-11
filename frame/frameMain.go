@@ -2,6 +2,7 @@
 package frame
 
 import (
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -27,6 +28,7 @@ var g_deferFuncs []func()
 var _debug_mode = false
 var _dev_mode = false
 var _mix_mode = false
+var _Plat_id = 0
 var once = &sync.Once{}
 
 type FrameOption struct {
@@ -72,14 +74,22 @@ func init() {
 			break
 		}
 	}
-
-	fmt.Printf("_debug_mode = %t, _dev_mode:%t, _mix_mode = %t\n", _debug_mode, _dev_mode, _mix_mode)
+	plat := flag.Int("plat", 0, "service plat")
+	flag.Parse()
+	_Plat_id = *plat
+	fmt.Println("启动分组:", *plat)
+	fmt.Printf("_Plat_id = %d, _debug_mode = %t, _dev_mode:%t, _mix_mode = %t\n", _Plat_id, _debug_mode, _dev_mode, _mix_mode)
 }
 
 func IsTestServer() bool {
 	return _global_config.IsTestServer
 }
-
+func GetGlobalConfigDir() string {
+	if _Plat_id == 0 {
+		return "../GlobalConfig/"
+	}
+	return fmt.Sprintf("../GlobalConfig/%d/", _Plat_id)
+}
 func IsDebug() bool {
 	return _debug_mode || _dev_mode /*|| _global_config.IsTestServer*/
 }

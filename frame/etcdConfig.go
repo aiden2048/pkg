@@ -57,7 +57,7 @@ func LoadEtcdConfig() error {
 	newConf := &EtcdConfig{}
 
 	fkey := "EtcdConfig.toml"
-	filename := "../GlobalConfig/" + fkey
+	filename := GetGlobalConfigDir() + fkey
 	_, err := toml.DecodeFile(filename, newConf)
 	if err != nil {
 		if !os.IsNotExist(err) {
