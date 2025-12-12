@@ -15,6 +15,7 @@ import (
 	"go.etcd.io/etcd/client/pkg/v3/fileutil"
 
 	"github.com/aiden2048/pkg/frame/logs"
+	logger2 "github.com/aiden2048/pkg/frame/logs/logger"
 	"github.com/aiden2048/pkg/utils"
 	"github.com/aiden2048/pkg/utils/baselib"
 )
@@ -33,19 +34,19 @@ var once = &sync.Once{}
 
 type FrameOption struct {
 	Port             int
-	Svrid            int  //-1000的时候,有系统根据服务器机器名编号
-	DisableNats      bool // 禁用 nats
-	DisableRpcx      bool //禁用rpcx
-	DisableMgo       bool //不启用Mgo
-	EnableMysql      bool //不启用mysql
-	EnableMixServer  bool //是否开通大混服
-	EnableAllAreaMix bool // 是否允许在全区域通服(plat_id<1000)启动
-	EnableAppUid     bool //是否启用假ID
-
+	Svrid            int   //-1000的时候,有系统根据服务器机器名编号
+	DisableRpcx      bool  //禁用rpcx
+	DisableMgo       bool  //不启用Mgo
+	EnableMysql      bool  //不启用mysql
+	EnableMixServer  bool  //是否开通大混服
+	EnableAllAreaMix bool  // 是否允许在全区域通服(plat_id<1000)启动
+	EnableAppUid     bool  //是否启用假ID
+	RpcCallTimeout   int32 //rpc调用超时时间, 默认5秒
 	XClientPoolSize  int
 	EventHandlerNum  int //监听事件通知起的线程数, 默认是0, 不限制
 	DisableHttpProxy bool
 	AllowCrossServer bool // 是否允许进程跨服访问
+	LogConf          *logger2.LogConf
 }
 
 var defFrameOption = &FrameOption{}
@@ -77,6 +78,7 @@ func init() {
 	plat := flag.Int("plat", 0, "service plat")
 	flag.Parse()
 	_Plat_id = *plat
+	_global_config.PlatformID = int32(_Plat_id)
 	fmt.Println("启动分组:", *plat)
 	fmt.Printf("_Plat_id = %d, _debug_mode = %t, _dev_mode:%t, _mix_mode = %t\n", _Plat_id, _debug_mode, _dev_mode, _mix_mode)
 }
@@ -84,9 +86,9 @@ func init() {
 func IsTestServer() bool {
 	return _global_config.IsTestServer
 }
-func GetGlobalConfigDir() string {
-	if _Plat_id == 0 {
-		return "../GlobalConfig/"
+func GetGlobalConfigDir(plat_id ...int32) string {
+	if len(plat_id) > 0 {
+		return fmt.Sprintf("../GlobalConfig/%d/", plat_id[0])
 	}
 	return fmt.Sprintf("../GlobalConfig/%d/", _Plat_id)
 }

@@ -31,7 +31,6 @@ var _allRpcxEtcdStore = struct {
 }{}
 
 func CheckRpcxService(platId int32, sname string, svrid int32, fname string) bool {
-	//最后根据OnlyRpcx 返回true走rpcx 返回false走nats
 	if platId <= 0 || platId == GetPlatformId() {
 		return IsUseRpcx()
 	}
@@ -39,14 +38,7 @@ func CheckRpcxService(platId int32, sname string, svrid int32, fname string) boo
 		logs.PrintError("CheckRpcxService Plat", platId, sname, svrid, fname, "本进程不同服, 不能跨服访问")
 		return false
 	}
-	// check rpcx v3
-	b := len(GetEtcdConfig().GetCenterEtcdAddr(platId)) > 0
-	if b {
-		logs.PrintDebug("CheckRpcxService Plat", platId, "bool", b, "sname", sname, "svrid", svrid, "fname", fname)
-		return b
-	}
-	logs.PrintDebug("CheckRpcxService Plat", platId, "bool", b, "sname", sname, "svrid", svrid, "fname", fname)
-	return b
+	return true
 }
 
 var dis_cache = &baselib.Map{}
@@ -75,21 +67,6 @@ func createDiscovery(addr []string, basePath string, platId int32, sname string,
 		dis_cache.Store(cache_key, d)
 		logs.PrintImportant("XClient Discovery", ver, " Store Create And Store", cache_key, d)
 		logs.Console("XClient Discovery", ver, " Store Create  And Store", cache_key, d)
-		/*return d, nil
-		} else {
-			//创建base 发现者, 然后复制
-			baseDis, err1 := createDiscovery(addr, basePath, platId, "/", ver)
-			if err1 != nil {
-				return nil, err1
-			}
-			d, err = baseDis.Clone(sname)
-			if err != nil {
-				return nil, err
-			}
-			dis_cache.Store(cache_key, d)
-			logs.PrintImportant("XClient Discovery", ver, " Store Clone  And Store", cache_key, d)
-			logs.Console("XClient Discovery", ver, " Store Clone  And Store", cache_key, d)
-		*/
 	}
 	// v3版本
 	//logs.Console("Start XClient Discovery", ver, addr, platId, sname, "key", cache_key, d.GetServices())
@@ -137,42 +114,12 @@ func createDiscoveryV3(platId int32, sname string) (client.ServiceDiscovery, err
 }
 
 func getDiscovery(platId int32, sname string) (client.ServiceDiscovery, error) {
-	/*_allServiceDiscovery.lock.Lock()
-	defer _allServiceDiscovery.lock.Unlock()
-	key := fmt.Sprintf("%d.%s", platId, sname)
-	if v, ok := _allServiceDiscovery.diss[key]; ok {
-		if v == nil || len(v.GetServices()) == 0 {
-			delete(_allServiceDiscovery.diss, key)
-			if v == nil {
-				logs.PrintInfo("XClient Discovery  key", key, "has no services", v)
-			} else {
-				v.Close()
-				logs.PrintInfo("XClient Discovery  key", key, "has no services", v.GetServices())
-			}
-		} else {
-			logs.Importantf("Get XClient Discovery for Plat:%d, Key:%s, pairs:%+v", platId, key, v.GetServices())
-			return v, nil
-		}
-	}*/
+
 	dis, err := createDiscoveryV3(platId, sname)
 	if dis != nil {
-		//_allServiceDiscovery.diss[key] = dis
 		return dis, nil
 	}
 
-	/*
-		centerAddr := GetEtcdConfig().GetEtcAddr(platId)
-		if len(centerAddr) == 0 {
-			logs.PrintImportant("XClient GetEtcAddr V2", platId, "nil, return ", err)
-			return nil, err
-		}
-
-		dis, err = createDiscoveryV2(platId, sname)
-		if dis != nil {
-			//_allServiceDiscovery.diss[key] = dis
-			return dis, nil
-		}
-		logs.PrintError("2.", err)*/
 	return nil, err
 }
 

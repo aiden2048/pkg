@@ -37,35 +37,26 @@ func LoadGlobalConfig() error {
 			return err
 		}
 	}
-	plat := _global_config.PlatformID
-	mix := _global_config.EnableMixServer
-	suffix := _global_config.MixSuffix
-
-	isTest := _global_config.IsTestServer
 
 	_global_config = newConf
-	_global_config.PlatformID = plat
-	_global_config.EnableMixServer = mix
-	_global_config.MixSuffix = suffix
+	_global_config.PlatformID = int32(_Plat_id)
 	if _global_config.MixSuffix == "" {
 		_global_config.MixSuffix = "Mix"
 	}
-	_global_config.IsTestServer = isTest
-	//if GetFrameOption().DisableHttpProxy == true {
-	//	_global_config.HttpProxyAddr = nil
-	//}
-	logs.LogDebug("_global_config:%+v", _global_config)
-	//if err := LoadProxyConfigs(); err != nil{
-	//	return err
-	//}
+	logs.Debugf("_global_config:%+v", _global_config)
+
 	return nil
 }
 
+// 客户端类型 1 安卓h5 2 安卓pwa 3 安卓apk 4 ios h5 5 ios pwa 6 ios app 7 windows 8 macos
 const (
 	OsTypeUnKnow = 0 //未知
-	OsTypeWeb    = 1 //web
-	OsTypeAos    = 2 //aos
-	OsTypeIos    = 3 //ios
-	OsTypeAosWeb = 4 //安卓web
-	OsTypeIosWeb = 5 //ios Web
+	OsTypeAnH5   = 1 //安卓h5
+	OsTypeAnPWA  = 2 //安卓pwa
+	OsTypeAnApk  = 3 //安卓apk
+	OsTypeiOSH5  = 4 //ios h5
+	OsTypeiOSPWA = 5 //ios pwa
+	OsTypeiOSApp = 6 //ios app
+	OsTypeWin    = 7 //windows
+	OsTypeMacOS  = 8 //macos
 )

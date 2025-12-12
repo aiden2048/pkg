@@ -1,11 +1,6 @@
 package frame
 
 import (
-	"crypto/tls"
-	"crypto/x509"
-	"fmt"
-	"io/ioutil"
-	t "log"
 	"strings"
 	"time"
 
@@ -139,52 +134,4 @@ func NatsCallMsg(natsConn *nats.Conn, mod string, svrid int32, cmd string, req i
 	}
 	ReportCallRpcStat(mod, cmd, ret, t)
 	return msg, nil
-}
-
-func ConnToNats(cfg *NatsConfig) (*nats.Conn, error) {
-	if cfg.Timeout <= 0 {
-		cfg.Timeout = 2
-	}
-
-	var tlscfg *tls.Config
-	if cfg.Secure {
-		tlscfg = &tls.Config{}
-		tlscfg.InsecureSkipVerify = true
-		if cfg.RootCa != "" {
-			rootCAs := x509.NewCertPool()
-			loaded, err := ioutil.ReadFile(cfg.RootCa)
-			if err != nil {
-				t.Fatalf("unexpected missing certfile: %v", err)
-			}
-			rootCAs.AppendCertsFromPEM(loaded)
-			tlscfg.RootCAs = rootCAs
-		}
-
-	}
-
-	var NatsOpts = nats.Options{
-		//	Url:            natsConfig.Url,
-		User:     cfg.User,
-		Password: cfg.Password,
-		//	Token:          natsConfig.Token,
-		Servers:        cfg.Servers,
-		Name:           genNameToNats(),
-		AllowReconnect: true,
-		MaxReconnect:   -1,
-		ReconnectWait:  100 * time.Millisecond,
-		Timeout:        time.Duration(cfg.Timeout) * time.Second,
-		Secure:         cfg.Secure,
-		TLSConfig:      tlscfg,
-	}
-
-	var err = error(nil)
-	newNatsConn, err := NatsOpts.Connect()
-	// 初始化Nats
-	if err != nil {
-		fmt.Printf("nats.Connect error:%s NatsOpts:%+v", err, NatsOpts)
-		logs.Errorf("nats.Connect error:%s", err)
-		return nil, err
-	}
-	logs.LogDebug("MaxPayload:%d", newNatsConn.MaxPayload())
-	return newNatsConn, nil
 }

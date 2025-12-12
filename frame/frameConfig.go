@@ -2,7 +2,6 @@ package frame
 
 import (
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/aiden2048/pkg/utils"
@@ -31,15 +30,11 @@ type RunConfig struct {
 	Port       int
 }
 
-type FrameConfig struct {
-	DisableCheckService bool
-	RpcCallTimeout      int32
-	LogConf             *logger2.LogConf
-	//UseRpcx             bool
-	//LogPath             string
-}
+// type FrameConfig struct {
+// 	LogConf *logger2.LogConf
+// }
 
-var config = NewDefaultFrameConfig()
+// var config = NewDefaultFrameConfig()
 var server_config = RunConfig{ServerName: "goServer", ServerID: 0}
 var GameNames = []string{"eGame", "flyGame" /*"quickG", "minesG", "singleG",*/, "gchat", "dataWatch"}
 
@@ -66,19 +61,19 @@ func GetPlatformId() int32 {
 }
 
 func GetCallTimeout() int32 {
-	return config.RpcCallTimeout
+	return defFrameOption.RpcCallTimeout
 }
 
 func GetCallHttpTimeout() int32 {
-	return config.RpcCallTimeout * 3
+	return defFrameOption.RpcCallTimeout * 3
 }
 
 func IsLogTable() bool {
-	return config.LogConf.GameFrame.TraceAllTable
+	return defFrameOption.LogConf.GameFrame.TraceAllTable
 }
 
 func GetRpcCallTimeout() time.Duration {
-	return time.Duration(config.RpcCallTimeout) * time.Second
+	return time.Duration(defFrameOption.RpcCallTimeout) * time.Second
 }
 
 func IsUseRpcx() bool {
@@ -92,22 +87,6 @@ func IsUseRpcx() bool {
 	return true
 }
 
-func NewDefaultFrameConfig() *FrameConfig {
-	return &FrameConfig{LogConf: &logger2.LogConf{
-		File: logger2.FileLogConf{
-			MaxFileSizeBytes:            logs.MaxFileSizeBytes,
-			LogDebugBeforeFileSizeBytes: logs.LogDebugBeforeFileSizeBytes,
-			LogInfoBeforeFileSizeBytes:  -1,
-			DebugMsgMaxLen:              logs.DebugMsgMaxLen,
-			FileMaxRemainDays:           3,
-			CompressFrequentHours:       24,
-			Level:                       logger2.LevelToStrMap[logger2.LevelDebug],
-			IsTestServer:                IsTestServer(),
-		},
-		AlertLevel: logger2.LevelToStrMap[logger2.LevelWarn],
-	}}
-}
-
 func InitConfig(svrName string, opt ...*FrameOption) error {
 	// 初始化
 	if len(opt) > 0 {
@@ -117,13 +96,6 @@ func InitConfig(svrName string, opt ...*FrameOption) error {
 	if cpun >= 16 {
 		cpun = 16
 		runtime.GOMAXPROCS(cpun)
-	}
-
-	//platid
-	if !defFrameOption.DisableRpcx || !defFrameOption.DisableNats {
-		if err := LoadPlatConfig(); err != nil {
-			return err
-		}
 	}
 
 	// 加载框架配置
@@ -142,21 +114,14 @@ func InitConfig(svrName string, opt ...*FrameOption) error {
 		//进程ID不超过九位数,所以做了组ID精简
 		if server_config.ServerID <= 0 {
 
-			//GameNames 几个进程固定ID
 			nPlatformId := int64(_global_config.PlatformID) * 100000
 			if utils.InArray(GameNames, GetServerName()) {
-				//nPlatformId := int64(_global_config.PlatformID) * 10000
 				server_config.ServerID = int32(nPlatformId)
 			} else {
-				//nPlatformId := int64(_global_config.PlatformID) * 1000000
-				//if _global_config.PlatformID > 2000 {
-				//	nPlatformId = int64(_global_config.PlatformID/10+_global_config.PlatformID%100) * 1000000
-				//}
 				ip := baselib.GetLocalIP()
 				ips := strings.Split(ip, ".")
 				if len(ips) > 3 {
 					nPlatformId += utils.StrToInt64(ips[3])
-					//nPlatformId += utils.StrToInt64(ips[2]) * 1000
 				}
 				server_config.ServerID = int32(nPlatformId)
 			}
@@ -206,7 +171,7 @@ func InitConfig(svrName string, opt ...*FrameOption) error {
 	baselib.RegisterReloadFunc(LoadGlobalConfig)
 	baselib.RegisterReloadFunc(LoadFrameConfig)
 	logs.Infof("Init Server GOMAXPROCS:%d, NumCpu:%d", cpun, runtime.NumCPU())
-	logs.Infof("Init Server %+v, FrameConfig:%+v", server_config, config)
+	logs.Infof("Init Server %+v, FrameConfig:%+v", server_config, defFrameOption)
 
 	if err := LoadSystemConfig(); err != nil {
 		//等待一会, 让日志打印出去
@@ -223,36 +188,12 @@ func InitConfig(svrName string, opt ...*FrameOption) error {
 		time.Sleep(sleepTime)
 		return err
 	}
-	//启动topnats, 暂时不支持热更新 配置
-	//if defFrameOption.EnableTopNats {
-	//	if err := LoadTopNatsConfig(); err != nil {
-	//		logs.Infof("LoadTopNatsConfig err:%+v", err)
-	//	}
-	//}
 
 	stat.SetAdditionMsgReport(GetServerName(), additionalMsgStat)
 	return nil
 }
 
-func LoadPlatConfig() error {
-	newConf := &TGlobalConfig{}
-	fkey := "Platform.toml"
-	filename := GetGlobalConfigDir() + fkey
-	_, err := toml.DecodeFile(filename, newConf)
-	if err != nil {
-		log.Printf("LoadPlatConfig DecodeFile:%s failed:%s", fkey, err.Error())
-		return err
-	}
-	_global_config = newConf
-	return nil
-}
-
 func LoadBootConfig() error {
-	if !defFrameOption.DisableRpcx || !defFrameOption.DisableNats {
-		if err := LoadPlatConfig(); err != nil {
-			return err
-		}
-	}
 	if defFrameOption.EnableMysql {
 		err := LoadMysqlConfig()
 		if err != nil {
@@ -267,18 +208,10 @@ func LoadBootConfig() error {
 		}
 		logs.Infof("connect to Mgo")
 	}
-	//plat := _global_config.PlatformID
-	//mix := _global_config.EnableMixServer
-	//isTest := _global_config.IsTestServer
+
 	if err := LoadGlobalConfig(); err != nil {
 		return err
 	}
-
-	//err = LoadNatsConfig()
-	//if err != nil {
-	//	return err
-	//}
-
 	return nil
 }
 
@@ -289,33 +222,44 @@ func LoadFrameConfig() error {
 		}
 	}
 	logs.Infof("Read Etcd Config:%+v", etcdConfig)
-	newConf := NewDefaultFrameConfig()
-	//logs.Infof("Load Config:%+v from: %s", newConf, filename)
-	if newConf.RpcCallTimeout <= 0 {
-		newConf.RpcCallTimeout = DEFAULT_RPC_REQUEST_SECONDS
+	if defFrameOption.RpcCallTimeout <= 0 {
+		defFrameOption.RpcCallTimeout = DEFAULT_RPC_REQUEST_SECONDS
 	}
-
-	config = newConf
 
 	logConf, err := _loadLogConfig()
 	if err == nil && logConf != nil {
-		config.LogConf = logConf
+		defFrameOption.LogConf = logConf
+	} else {
+		defFrameOption.LogConf = &logger2.LogConf{
+			File: logger2.FileLogConf{
+				MaxFileSizeBytes:            logs.MaxFileSizeBytes,
+				LogDebugBeforeFileSizeBytes: logs.LogDebugBeforeFileSizeBytes,
+				LogInfoBeforeFileSizeBytes:  -1,
+				DebugMsgMaxLen:              logs.DebugMsgMaxLen,
+				FileMaxRemainDays:           3,
+				CompressFrequentHours:       24,
+				Level:                       logger2.LevelToStrMap[logger2.LevelDebug],
+				IsTestServer:                IsTestServer(),
+			},
+			AlertLevel: logger2.LevelToStrMap[logger2.LevelWarn],
+		}
+
 	}
 
-	LoadLogConfig(config.LogConf)
+	LoadLogConfig(defFrameOption.LogConf)
 
-	share.Trace = config.LogConf.LogRpcx
+	share.Trace = defFrameOption.LogConf.LogRpcx
 	return nil
 }
 
 func LoadSystemConfig() error {
 
 	// 不开启 nats
-	if !defFrameOption.DisableNats {
-		if err := LoadNatsConfig(); err != nil {
-			return err
-		}
+
+	if err := LoadNatsConfig(); err != nil {
+		return err
 	}
+
 	logs.Infof("Read Nats Config:%+v", natsConfig)
 
 	return nil

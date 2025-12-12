@@ -2,13 +2,12 @@ package mongodb
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
+	"sync"
 	"time"
 
 	"github.com/aiden2048/pkg/public/redisDeal"
-	"github.com/aiden2048/pkg/utils"
 
 	"github.com/aiden2048/pkg/frame"
 	"github.com/aiden2048/pkg/frame/logs"
@@ -20,12 +19,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/writeconcern"
 )
 
-var db *mongo.Client
-var ordb *mongo.Client
-var confDb *mongo.Client
-var logDb *mongo.Client             // log库
-var imageRepositoryDb *mongo.Client // 镜像库
-var topDb *mongo.Client             // top库
+var db = &sync.Map{} //*mongo.Client
+var ordb = &sync.Map{}
 
 // var conforDb *mongo.Client
 var mgoUrl string // mono的uri
@@ -44,12 +39,8 @@ var disableReportMongoIndex = false
 var indexCreateType = IndexCreateByBoot
 
 const (
-	RealKey            = 1 // 运行从库
-	RealReadKey        = 2 // 运行主库
-	ConfKey            = 3 // 配置从库
-	ImageRepositoryKey = 4 // 镜像库
-	TopKey             = 5 // top 数据库
-	LogKey             = 6 // 配置从库
+	RealKey     = 1 // 运行从库
+	RealReadKey = 2 // 运行主库
 )
 const (
 	WLevel1 WriteC = 1 // 写关注等级 1个节点确认
@@ -80,57 +71,28 @@ func SetIndexCreateType(cType int) {
 	indexCreateType = cType
 }
 
-func StartMgoDb(wl WriteC, dbs ...int) (err error) {
-	if len(dbs) == 0 || utils.InArray(dbs, RealKey) {
-		if db == nil {
-			db, err = startReal(frame.GetMgoCoinfig().Real, wl)
-			if err != nil {
-				return err
-			}
-		}
-		if ordb == nil {
-			ordb, err = startOnlyRead(frame.GetMgoCoinfig().Real, wl)
-			if err != nil {
-				return err
-			}
-		}
+func StartMgoDb(wl WriteC, plat_id ...int32) (err error) {
+	pid := int32(frame.GetPlatformId())
+	if len(plat_id) > 0 {
+		pid = plat_id[0]
 	}
-	if len(dbs) == 0 || utils.InArray(dbs, ConfKey) {
-
-		if confDb == nil {
-			confDb, err = startReal(frame.GetMgoCoinfig().Conf, wl)
-			if err != nil {
-				return err
-			}
+	client, ok := db.Load(pid)
+	if !ok || client == nil {
+		dbi, err := startReal(frame.GetMgoCoinfig(pid).Real, wl)
+		if err != nil {
+			return err
 		}
+		db.Store(pid, dbi)
 	}
-	if len(dbs) == 0 || utils.InArray(dbs, LogKey) {
-		if logDb == nil {
-			logDb, err = startReal(frame.GetMgoCoinfig().Log, wl)
-			if err != nil {
-				return err
-			}
+	ordbi, ok := ordb.Load(pid)
+	if !ok || ordbi == nil {
+		ordbi, err = startOnlyRead(frame.GetMgoCoinfig(pid).Real, wl)
+		if err != nil {
+			return err
 		}
-	}
-	// 必须指定库才需要初始化
-	if utils.InArray(dbs, ImageRepositoryKey) {
-		if imageRepositoryDb == nil {
-			imageRepositoryDb, err = startReal(frame.GetMgoCoinfig().ImageRepository, wl)
-			if err != nil {
-				return err
-			}
-		}
+		ordb.Store(pid, ordbi)
 	}
 
-	// 必须指定库才需要初始化
-	if utils.InArray(dbs, TopKey) {
-		if topDb == nil {
-			topDb, err = startReal(frame.GetMgoCoinfig().Top, wl)
-			if err != nil {
-				return err
-			}
-		}
-	}
 	// 索引上报依赖redis
 	if err = redisDeal.StartRedis(); err != nil {
 		log.Fatalf("InitRedis failed: %s", err.Error())
@@ -138,16 +100,6 @@ func StartMgoDb(wl WriteC, dbs ...int) (err error) {
 	}
 	return nil
 
-}
-
-// 设置默认数据库 （top使用）
-func SetDefaultKey(key int8) error {
-	DefaultKey = key
-	if getDbSession(key) == nil {
-		logs.Errorf("mongo 获取失败  致命错误 key:%d", key)
-		return errors.New("mongo 获取失败  致命错误 ")
-	}
-	return nil
 }
 
 func startReal(cfg frame.MgoSvrCfg, writeLevel WriteC) (*mongo.Client, error) {
@@ -190,9 +142,6 @@ func initCfg(cfg frame.MgoSvrCfg) (string, frame.MgoSvrCfg) {
 	} else {
 		uri = fmt.Sprintf("mongodb+srv://%s:%s@%s", cfg.User, cfg.Password, cfg.SrvUrl)
 	}
-	//if cfg.MinPoolNum == 0 {
-	//	cfg.MinPoolNum = 16
-	//}
 	if cfg.ConnIdleTime == 0 {
 		cfg.ConnIdleTime = 30
 	}
@@ -202,73 +151,68 @@ func initCfg(cfg frame.MgoSvrCfg) (string, frame.MgoSvrCfg) {
 	return uri, cfg
 }
 
-// GetMongoDb change stream 使用，一般不推荐使用这个接口
-func GetMongoDb() *mongo.Client {
-	if db == nil {
-		logs.Errorf("mongo Db 获取失败  致命错误")
-		return nil
+func GetMongoDb(plat_id ...int32) *mongo.Client {
+	pid := int32(frame.GetPlatformId())
+	if len(plat_id) > 0 {
+		pid = plat_id[0]
 	}
-	return db
+	client, ok := db.Load(pid)
+	if !ok || client == nil {
+		err := StartMgoDb(WLevel2, pid)
+		if err != nil {
+			logs.Errorf("mongo Db 获取失败  致命错误 %v", err)
+			return nil
+		}
+		client, ok := db.Load(pid)
+		if !ok || client == nil {
+			logs.Errorf("mongo Db 获取失败  致命错误")
+			return nil
+		}
+		return client.(*mongo.Client)
+	}
+	return client.(*mongo.Client)
+}
+func GetOrMongoDb(plat_id ...int32) *mongo.Client {
+	pid := int32(frame.GetPlatformId())
+	if len(plat_id) > 0 {
+		pid = plat_id[0]
+	}
+	client, ok := db.Load(pid)
+	if !ok || client == nil {
+		err := StartMgoDb(WLevel2, pid)
+		if err != nil {
+			logs.Errorf("mongo Db 获取失败  致命错误 %v", err)
+			return nil
+		}
+		client, ok := db.Load(pid)
+		if !ok || client == nil {
+			logs.Errorf("mongo Db 获取失败  致命错误")
+			return nil
+		}
+		return client.(*mongo.Client)
+	}
+	return client.(*mongo.Client)
+}
+func GetDbSession(key int8, plat_id int32) *mongo.Client {
+	return getDbSession(key, plat_id)
 }
 
-// GetMongoLogDb change stream 使用，一般不推荐使用这个接口
-func GetMongoLogDb() *mongo.Client {
-	if logDb == nil {
-		logs.Errorf("mongo logDb 获取失败  致命错误")
-		return nil
-	}
-	return logDb
-}
-func GetDbSession(key int8) *mongo.Client {
-	return getDbSession(key)
-}
-
-func GetMongoImageDb() *mongo.Client {
-	if imageRepositoryDb == nil {
-		logs.Errorf("mongo imageDb 获取失败  致命错误")
-		return nil
-	}
-	return imageRepositoryDb
-}
-
-func getDbSession(key int8) *mongo.Client {
+func getDbSession(key int8, plat_id int32) *mongo.Client {
 	switch key {
 	case RealKey:
-		if db == nil {
+		dbi := GetMongoDb(plat_id)
+		if dbi == nil {
 			logs.Errorf("RealKey mongo 获取失败  致命错误")
 			return nil
 		}
-		return db
+		return dbi
 	case RealReadKey:
-		if ordb == nil {
-			logs.Errorf("RealReadKey mongo 获取失败 致命错误")
+		ordbi := GetOrMongoDb(plat_id)
+		if ordbi == nil {
+			logs.Errorf("RealReadKey mongo 获取失败  致命错误")
 			return nil
 		}
-		return ordb
-	case ConfKey:
-		if confDb == nil {
-			logs.Errorf("ConfKey mongo 获取失败 致命错误")
-			return nil
-		}
-		return confDb
-	case ImageRepositoryKey:
-		if imageRepositoryDb == nil {
-			logs.Errorf("ImageRepositoryKey mongo 获取失败 致命错误")
-			return nil
-		}
-		return imageRepositoryDb
-	case TopKey:
-		if topDb == nil {
-			logs.Errorf("TopKey mongo 获取失败 致命错误")
-			return nil
-		}
-		return topDb
-	case LogKey:
-		if logDb == nil {
-			logs.Errorf("LogKey mongo 获取 失败 致命错误")
-			return nil
-		}
-		return logDb
+		return ordbi
 	default:
 		return nil
 	}

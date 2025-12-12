@@ -65,7 +65,7 @@ func LoadConfigFromMongo(key string, conf interface{}) error {
 	if defFrameOption.DisableMgo {
 		return nil
 	}
-	db, err := initMongo(&GetMgoCoinfig().Conf)
+	db, err := initMongo(&GetMgoCoinfig().Real)
 	if err != nil {
 		return err
 	}

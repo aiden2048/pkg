@@ -123,44 +123,6 @@ func LoadNatsConfig() error {
 	} else {
 		logs.Print("plat", GetPlatformId(), "本组 没有配置Nats,++++++++++++++++++")
 	}
-
-	//if defFrameOption.EnableMixServer {
-	//	logs.Print("本进程启用互通模式,需要链接其他的 mapNats:", newConf.mapNats)
-	//	// 先清理配置不存在的连接
-	//	clearnMixNatsConn(newConf)
-	//	//newConf.mapNats = make(map[int32]*NatsConfig, len(newConf.mapNats))
-	//	for _, addr := range newConf.mapNats {
-	//		if addr.PlatId == GetPlatformId() {
-	//			continue
-	//		}
-	//		if GetPlatformId() > 100 && addr.IsMix {
-	//			// 不是top的通服组 不连接通服nats
-	//			continue
-	//		}
-	//		if len(addr.Servers) == 0 {
-	//			logs.PrintError("mapNats 互通的 Nats 配置错误, plat", addr)
-	//			continue
-	//		}
-	//		logs.Print("mapNats 开始链接 其他组nats", addr)
-	//		if getMixNatsConn(addr.PlatId) == nil || !checkNatsConfigEqual(natsConfig.GetNatsConfig(addr.PlatId), addr) {
-	//			if err := StartMixNatsService(addr); err != nil {
-	//				logs.PrintError("mapNats Start NatsService", addr, " Failed", err)
-	//			}
-	//		}
-	//	}
-	//}
-
-	// 连接中心节点
-	//centerNatsConfig := getCenterNatsConfig(GetPlatformId())
-	//if centerNatsConfig != nil && len(centerNatsConfig.Servers) > 0 {
-	//	logs.Print("centerNats 开始链接 centerNats", centerNatsConfig)
-	//	if getCenterNatsConn(GetPlatformId()) == nil {
-	//		if err := StartCenterNatsService(centerNatsConfig); err != nil {
-	//			logs.PrintError("centerNats Start NatsService", centerNatsConfig, " Failed", err)
-	//		}
-	//	}
-	//}
-
 	natsConfig = newConf
 	return nil
 }

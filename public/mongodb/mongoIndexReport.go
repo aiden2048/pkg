@@ -10,8 +10,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"github.com/aiden2048/pkg/frame/runtime"
-	"github.com/aiden2048/pkg/public/redisDeal"
-	"github.com/aiden2048/pkg/public/redisKeys"
 )
 
 // 定时器
@@ -139,10 +137,17 @@ func startLocalTicker() {
 					dbName := GetRealMongoName(arr[0])
 					tbName := GetRealMongoName(arr[1])
 					queryKey := arr[2]
-					redisKey := redisKeys.GenMongoQueryHashKey(dbName, tbName, 0)
-					if redisDeal.GetRedisPool(redisKey.Name) != nil {
-						redisDeal.RedisSendHincrby(redisKey, queryKey, count, 4*24*3600)
+					event := &ReportQueryCountMsgEvent{
+						DbName:   dbName,
+						TbName:   tbName,
+						QueryKey: queryKey,
+						Count:    count,
 					}
+					event.Send()
+					// redisKey := redisKeys.GenMongoQueryHashKey(dbName, tbName, 0)
+					// if redisDeal.GetRedisPool(redisKey.Name) != nil {
+					// 	redisDeal.RedisSendHincrby(redisKey, queryKey, count, 4*24*3600)
+					// }
 					return true
 				})
 				locker := sync.Mutex{}

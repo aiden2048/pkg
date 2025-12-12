@@ -481,7 +481,7 @@ func (m *NatsMsg) response(errno int32, errstr string, rspparam interface{}, isE
 		return nil
 	}
 	//这个是从rpcx收到websocket过来的请求, conn转发过来的websocket的请求都是onway
-	if /*m.GetNatsMsg() == nil &&*/ m.GetSession().Channel > 0 {
+	if m.GetSession().Channel > 0 {
 		rsp := QgMsp{
 			Cmd:    m.MsgBody.Func,
 			ErrNo:  errno,
@@ -490,29 +490,8 @@ func (m *NatsMsg) response(errno int32, errstr string, rspparam interface{}, isE
 		rsp.BytePara, _ = jsoniter.Marshal(rspparam)
 		return SendMsgToClient(m.GetSession(), errno, errstr, m.MsgBody.Func, rsp, isEncrypt)
 	}
-	rspmsg := NatsMsg{Sess: *m.GetSession()}
-	rspmsg.Encrypt = isEncrypt
-	rspmsg.MsgBody.Mod = GetServerName()
-	rspmsg.MsgBody.Func = m.MsgBody.Func
-	rspmsg.MsgBody.Check = m.MsgBody.Check
-	rspmsg.MsgBody.ErrNo = errno
-	rspmsg.MsgBody.ErrStr = errstr
-	rspmsg.MsgBody.Trace = traceId
 
-	if rspparam != nil {
-		rspmsg.MsgBody.Param, err = jsoniter.Marshal(rspparam)
-		if err != nil {
-			logs.Errorf("Failed to jsoniter.Marshal: %+v, err:%+v", rspparam, err)
-			return errors.New("jsoniter.Marshal rsp failed")
-		}
-	}
-
-	//reply := fmt.Sprintf("rpc.p2p.%s.%d", m.GetSession().SvrFE, m.GetSession().SvrID)
-	//if m.GetNatsMsg() != nil {
-	//	reply = m.GetNatsMsg().Reply
-	//}
-	rspmsg.Cookie = m.Cookie
-	return NatsSendReply(m, &rspmsg)
+	return nil
 }
 
 type QgMsp struct {

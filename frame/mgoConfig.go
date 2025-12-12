@@ -3,6 +3,7 @@ package frame
 import (
 	"fmt"
 	"os"
+	"sync"
 
 	"github.com/aiden2048/pkg/frame/logs"
 
@@ -41,41 +42,55 @@ func (mcfg *MgoSvrCfg) GetUrl() string {
 
 // "user:pass@localhost:27017"
 type MgoCfg struct {
-	IsEncry         bool      // 是否加密数据库信息 0不加密 1加密
-	Real            MgoSvrCfg // 运行库
-	Conf            MgoSvrCfg // 配置库
-	ImageRepository MgoSvrCfg // 镜像库
-	Top             MgoSvrCfg // top库
-	Log             MgoSvrCfg // log库
+	IsEncry bool      // 是否加密数据库信息 0不加密 1加密
+	Real    MgoSvrCfg // 运行库
 }
 
-var mgo_config = &MgoCfg{}
+var mgo_config = &sync.Map{}
 
-func GetMgoCoinfig() *MgoCfg {
-	return mgo_config
+func GetMgoCoinfig(plat_id ...int32) *MgoCfg {
+	pid := int32(_Plat_id)
+	if len(plat_id) > 0 {
+		pid = plat_id[0]
+	}
+	cfg, ok := mgo_config.Load(pid)
+	if !ok {
+		// 没加载，尝试加载
+		LoadMgoConfig(plat_id...)
+		cfg, ok := mgo_config.Load(pid)
+		if !ok {
+			return nil
+		}
+		return cfg.(*MgoCfg)
+	}
+	return cfg.(*MgoCfg)
 }
 
-func GetMongoRealConnUrl() string {
+func GetMongoRealConnUrl(plat_id ...int32) string {
 	add := ""
-	for id, url := range mgo_config.Real.Url {
+	mcfg := GetMgoCoinfig(plat_id...)
+	if mcfg == nil {
+		return ""
+	}
+	for id, url := range mcfg.Real.Url {
 		if id == 0 {
 			add = url
 		} else {
 			add += fmt.Sprintf(",%s", url)
 		}
 	}
-	url := fmt.Sprintf("%s:%s@%s", mgo_config.Real.User, mgo_config.Real.Password, add)
-	if mgo_config.Real.Query != "" {
-		url = url + "?" + mgo_config.Real.Query
+	url := fmt.Sprintf("%s:%s@%s", mcfg.Real.User, mcfg.Real.Password, add)
+	if mcfg.Real.Query != "" {
+		url = url + "?" + mcfg.Real.Query
 	}
 	return url
 }
 
-func LoadMgoConfig() error {
+func LoadMgoConfig(plat_id ...int32) error {
 	newConf := &MgoCfg{}
 
 	fkey := "MgoConfig.toml"
-	filename := GetGlobalConfigDir() + fkey
+	filename := GetGlobalConfigDir(plat_id...) + fkey
 	_, err := toml.DecodeFile(filename, newConf)
 	if err != nil {
 		if !os.IsNotExist(err) {
@@ -83,27 +98,16 @@ func LoadMgoConfig() error {
 		}
 		return err
 	}
-	if newConf.Conf.User == "" {
-		newConf.Conf = newConf.Real
-	}
-	if newConf.ImageRepository.User == "" {
-		newConf.ImageRepository = newConf.Real
-	}
-	if newConf.Top.User == "" {
-		newConf.Top = newConf.Real
-	}
-	if newConf.Log.User == "" {
-		newConf.Log = newConf.Real
-	}
+
 	if newConf.IsEncry {
 		DecodeConf(&newConf.Real)
-		DecodeConf(&newConf.Conf)
-		DecodeConf(&newConf.ImageRepository)
-		DecodeConf(&newConf.Top)
-		DecodeConf(&newConf.Log)
 	}
-	mgo_config = newConf
-	logs.Print("Load MongoConfig", mgo_config)
+	pid := int32(_Plat_id)
+	if len(plat_id) > 0 {
+		pid = plat_id[0]
+	}
+	mgo_config.Store(pid, newConf)
+	logs.Print("Load MongoConfig", newConf)
 	return nil
 }
 
