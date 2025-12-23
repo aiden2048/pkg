@@ -10,58 +10,8 @@ import (
 	"github.com/aiden2048/pkg/frame/logs"
 
 	"time"
-
-	"github.com/nats-io/nats.go"
 )
 
-type serviceSubscription struct {
-	conn      *nats.Conn
-	subj      string
-	queue     string
-	ch        chan *nats.Msg
-	handler   func(*nats.Conn, *nats.Msg) int32
-	threadNum int
-	oSubs     []*nats.Subscription
-}
-
-var g_natsSubjects []*serviceSubscription
-
-func onRegSubject(sSub *serviceSubscription) {
-	if sSub == nil || sSub.conn != gNatsconn {
-		return
-	}
-	if g_natsSubjects == nil {
-		g_natsSubjects = make([]*serviceSubscription, 0, 100)
-	}
-	g_natsSubjects = append(g_natsSubjects, sSub)
-	logs.Debugf("append subject %+v", sSub)
-
-}
-func UnloadAllSubject() {
-
-	nsubjs := g_natsSubjects
-	g_natsSubjects = nil
-
-	for _, sSub := range nsubjs {
-
-		for _, oSub := range sSub.oSubs {
-			logs.Infof("UnRegist Nats Subject :%s, %s", oSub.Subject, oSub.Queue)
-			oSub.Unsubscribe()
-		}
-	}
-
-}
-func ReregistSubject() {
-	natsSubjects := make([]*serviceSubscription, 0, 100)
-	for _, sSub := range g_natsSubjects {
-		natsSubjects = append(natsSubjects, sSub)
-	}
-	UnloadAllSubject()
-	for _, sSub := range natsSubjects {
-		DoRegistNatsHandler(gNatsconn, sSub.subj, sSub.queue, sSub.handler, sSub.threadNum, onRegSubject)
-	}
-
-}
 func GenReqSubject(mod string, cmd string, svrid int32) string {
 	if svrid <= 0 {
 		return fmt.Sprintf("%d.msg.%s.%s", GetPlatformId(), mod, cmd)
@@ -166,13 +116,6 @@ func HandlerConnCmdByServerName(cmd string, handler func(context.Context, *NatsM
 		return err
 	}
 	return nil
-}
-
-// NotifyStopConfig
-func NotifyStopService(serverName string, serverId int32, obj interface{}) {
-	stopKey := fmt.Sprintf("%d.config.stop_server.%s-%d", GetPlatformId(), serverName, serverId)
-	//stopKey = "config" + "." + stopKey
-	_ = NatsPublish(gNatsconn, stopKey, obj, false, nil)
 }
 
 // 注册可以不校验登录态的接口

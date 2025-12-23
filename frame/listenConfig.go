@@ -21,41 +21,40 @@ func getCacheSubj(cfg string) string {
 func NotifyReloadConfig(cfg string, obj interface{}) {
 	subj := getConfigSubj(cfg)
 	logs.Infof("NotifyReloadConfig subj:%s,obj:%+v", subj, obj)
-	NatsPublish(gNatsconn, subj, obj, false, nil)
+	NatsPublish(GetNatsConn(GetPlatformId()), subj, obj, false, nil)
 }
 
 // 监听配置变更通知
 func ListenConfig(config_key string, _func func([]byte)) {
 	subj := getConfigSubj(config_key)
 	queue := fmt.Sprintf("%s-%d", GetServerName(), GetServerID())
-	err := DoRegistNatsHandler(gNatsconn, subj, queue, func(nConn *nats.Conn, msg *nats.Msg) int32 {
+	err := DoRegistNatsHandler(GetNatsConn(GetPlatformId()), subj, queue, func(nConn *nats.Conn, msg *nats.Msg) int32 {
 		logs.Infof("Recv_Config %s to reload config:%s", msg.Subject, string(msg.Data))
 		_func(msg.Data)
 		return 0
-	}, 1, onRegSubject)
+	}, 1)
 
 	logs.Infof("ListenConfig key: %s @ %s %+v", subj, queue, err)
 }
 func NotifyReloadCache(key string, obj interface{}) {
 	subj := getCacheSubj(key)
 	logs.Infof("NotifyReloadCache subj:%s,obj:%+v", subj, obj)
-	NatsPublish(gNatsconn, subj, obj, false, nil)
+	NatsPublish(GetNatsConn(GetPlatformId()), subj, obj, false, nil)
 }
 
 // 监听配置变更通知
 func ListenCache(config_key string, _func func([]byte)) {
 	subj := getCacheSubj(config_key)
 	queue := fmt.Sprintf("%s-%d", GetServerName(), GetServerID())
-	err := DoRegistNatsHandler(gNatsconn, subj, queue, func(nConn *nats.Conn, msg *nats.Msg) int32 {
+	err := DoRegistNatsHandler(GetNatsConn(GetPlatformId()), subj, queue, func(nConn *nats.Conn, msg *nats.Msg) int32 {
 		logs.Infof("Recv_Cache %s to reload config:%s", msg.Subject, string(msg.Data))
 		_func(msg.Data)
 		return 0
-	}, 1, onRegSubject)
+	}, 1)
 	logs.Infof("ListenCache key: %s @ %s %+v", subj, queue, err)
 }
 
-func DoRegistNatsHandler(natsConn *nats.Conn, subj string, queue string, handler func(*nats.Conn, *nats.Msg) int32, threadNum int,
-	onReg func(sSub *serviceSubscription)) error {
+func DoRegistNatsHandler(natsConn *nats.Conn, subj string, queue string, handler func(*nats.Conn, *nats.Msg) int32, threadNum int) error {
 
 	// TODO Add options logic
 	if natsConn == nil {
@@ -102,10 +101,6 @@ func DoRegistNatsHandler(natsConn *nats.Conn, subj string, queue string, handler
 	}
 
 	natsConn.Flush()
-	if onReg != nil {
-		sSub := &serviceSubscription{conn: natsConn, subj: subj, queue: queue, handler: handler, threadNum: threadNum, oSubs: oSubjs}
-		onReg(sSub)
-	}
 
 	return nil
 }

@@ -33,7 +33,7 @@ func ReportStat(object string, funcName string, result int, processTime time.Dur
 }
 
 func additionalMsgStat(key string, value *stat.MsgStatData, avgProcessTime time.Duration, avgSuccProcessTime time.Duration) {
-	if GetNatsConn() == nil {
+	if GetNatsConn(GetPlatformId()) == nil {
 		logs.Importantf("nats 还没起来， 不能上报")
 		return
 	}

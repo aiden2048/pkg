@@ -211,14 +211,6 @@ func startRpcServer() error {
 	return nil
 }
 func stopRegistryPlugin() {
-
-	//plugins := registryPlugin
-	//registryPlugin = nil
-	//for _, pl := range plugins {
-	//	_ = pl.Stop()
-	//	logs.Importantf("Stop EtcdPlugin, Address:%s Service:%+v, Server:%+v", pl.ServiceAddress, pl.Services, pl.EtcdServers)
-	//	log.Printf("Stop EtcdPlugin, Address:%s Service:%+v, Server:%+v\n", pl.ServiceAddress, pl.Services, pl.EtcdServers)
-	//}
 	pluginsV3 := registryPluginV3
 	registryPluginV3 = nil
 	for _, pl := range pluginsV3 {

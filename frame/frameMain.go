@@ -256,7 +256,6 @@ For:
 		case <-sig.UnloadSignal():
 			fmt.Println("Receive Unload Signal, UnloadAllSubject")
 			logs.Important("Receive Unload Signal, UnloadAllSubject")
-			UnloadAllSubject()
 			stopRpcxServer()
 			//stopRpcxV3Server()
 		case <-sig.StopSignal():
@@ -301,11 +300,7 @@ func stop() {
 	log.Printf(">>>>>>>>>>>>>>> Start Stop %s-%d at %s ================\n", GetServerName(), GetServerID(), startTime.Format(baselib.TimeFormatMilli))
 
 	// 必须按顺序来，先将nats的订阅全部取消, 使得新请求不会再过来
-	UnloadAllSubject()
 	stopRpcxServer()
-	//stopRpcxV3Server()
-
-	//log.Printf("UnloadAllSubject\n")
 	//延迟一秒, 处理完所有的消息
 	time.Sleep(1000 * time.Millisecond)
 	// 然后处理剩下的请求之后，停止Service的协程
@@ -315,12 +310,6 @@ func stop() {
 	// 最后Flush日志缓存
 	logs.CloseAllLogAdapter() // 注册清理操作，将并发管道中还没有打印的日志全部打印完才退出
 	log.Printf("CloseAllLogAdapter\n")
-	//logs.CloseAllSyslogAdapter()
-	//buf, _ := ioutil.ReadFile("run.id")
-	//runinfo := fmt.Sprintf("%s\n%d %s %d %s ... stop\n", buf, os.Getpid(),
-	//	GetServerName(), GetServerID(), time.Now().Format(utils.TimeFormat_Full))
-	//ioutil.WriteFile("run.id", []byte(runinfo), os.ModeAppend)
-
 	now := time.Now()
 	logs.Infof(">>>>>>>>>>>>>>> Succ Stop %s-%d at %s,cost: %d ms ================",
 		GetServerName(), GetServerID(), now.Format(baselib.TimeFormatMilli), now.Sub(startTime)/time.Millisecond)
@@ -338,10 +327,6 @@ func ManualStop() {
 
 	logs.Infof("Begin ManualStop ... ")
 	log.Println("Begin ManualStop ... ")
-	UnloadAllSubject()
-	//stopRpcxServer()
-	//stopRpcxV3Server()
-	//CloseServer()
 	stopRegistryPlugin()
 	log.Println("End ManualStop")
 	logs.Infof("End ManualStop")

@@ -37,16 +37,31 @@ func PulljsEvent[R any](streamName, sub string, app_id int32, consumer string, l
 	streamName = FixStreamName(streamName)
 	return PulljsEventEx(streamName, sub, app_id, consumer, logic)
 }
-func PulljsEventEx[R any](streamName, sub string, app_id int32, consumer string, logic func(reqs []*R) *errorMsg.ErrRsp, option ...*frame.ConsumeOption) error {
-	js := frame.GetNatsStreamContext()
+
+func PulljsEventEx[R any](
+	streamName string,
+	sub string,
+	app_id int32,
+	consumer string,
+	logic func(reqs []*R) *errorMsg.ErrRsp,
+	option ...*frame.ConsumeOption,
+) error {
+
+	streams := frame.GetNatsStreamContext()
+
 	streamkey := frame.GetNatsStreamKey(streamName, sub)
 	streamkey = fmt.Sprintf("%s.%d", streamkey, app_id)
+
 	if err := frame.CreateNatsStream(streamkey); err != nil {
-		logs.Errorf("Stream:%s subj:%s Publish Checksubect err:%+v", streamkey, sub, err)
+		logs.Errorf(
+			"Stream:%s subj:%s Publish Checksubect err:%+v",
+			streamkey, sub, err,
+		)
 		return err
 	}
+
 	op := &frame.ConsumeOption{}
-	if len(option) > 0 {
+	if len(option) > 0 && option[0] != nil {
 		op = option[0]
 	}
 	if op.BatchSize <= 0 {
@@ -55,62 +70,118 @@ func PulljsEventEx[R any](streamName, sub string, app_id int32, consumer string,
 	if op.MaxWaitMsec <= 0 {
 		op.MaxWaitMsec = 10000
 	}
-	subs, err := js.PullSubscribe(streamkey, consumer)
-	if err != nil {
-		return err
-	}
-	runtime.Go(func() {
-		defer subs.Unsubscribe()
-		for {
-			start := time.Now()
-			msgs, err := subs.Fetch(op.BatchSize, nats.MaxWait(time.Duration(op.MaxWaitMsec)*time.Millisecond))
-			if err != nil {
-				t := time.Since(start)
-				frame.ReportDoRpcStat("PullNats", streamkey, frame.ESMR_FAILED, t)
-				logs.Bill("Pull_Nats_Fail", "streamName:%s, sub:%s, consumer:%s,err:%+v", streamName, sub, consumer, err)
-			}
-			var reqs []*R
-			for _, msg := range msgs {
-				qgreq := frame.NatsTransMsg{}
-				var req R
-				err := jsoniter.Unmarshal(msg.Data, &qgreq)
-				if err != nil {
-					t := time.Since(start)
-					frame.ReportDoRpcStat("Unmarshal", streamkey, frame.ESMR_FAILED, t)
-					logs.Bill("Pull_Nats_Fail", "streamName:%s, sub:%s, consumer:%s,data:%s,err:%+v", streamName, sub, consumer, string(msg.Data), err)
-					continue
-				}
-				err = jsoniter.Unmarshal(qgreq.MsgBody, &req)
-				if err != nil {
-					t := time.Since(start)
-					frame.ReportDoRpcStat("Unmarshal", streamkey, frame.ESMR_FAILED, t)
-					logs.Bill("Pull_Nats_Fail", "streamName:%s, sub:%s, consumer:%s,data:%s,err:%+v", streamName, sub, consumer, string(msg.Data), err)
-					continue
-				}
-				reqs = append(reqs, &req)
-			}
-			eventErr := logic(reqs)
-			if eventErr != nil {
-				logs.Bill("Pull_Nats_Fail", "streamName:%s, sub:%s, consumer:%s,data:%s,err:%+v", streamName, sub, consumer, reqs, eventErr)
-				continue
-			}
-			for _, msg := range msgs {
-				doTime := time.Now()
-				pubTime := msg.Header.Get("PublishTime")
-				if pubTime != "" {
-					pt, errs := time.Parse(time.RFC3339Nano, pubTime)
-					if errs == nil {
-						stat.ReportStat("Nats.PullStream."+streamName+"."+sub, 0, doTime.Sub(pt))
+
+	for _, js := range streams {
+		subs, err := js.PullSubscribe(streamkey, consumer)
+		if err != nil {
+			return err
+		}
+
+		// 把所有外部变量一次性隔离
+		func(
+			subs *nats.Subscription,
+			streamKey string,
+			streamName string,
+			sub string,
+			consumer string,
+			op frame.ConsumeOption,
+			logic func(reqs []*R) *errorMsg.ErrRsp,
+		) {
+			runtime.Go(func() {
+				defer subs.Unsubscribe()
+
+				for {
+					start := time.Now()
+
+					msgs, err := subs.Fetch(
+						op.BatchSize,
+						nats.MaxWait(time.Duration(op.MaxWaitMsec)*time.Millisecond),
+					)
+					if err != nil {
+						t := time.Since(start)
+						frame.ReportDoRpcStat("PullNats", streamKey, frame.ESMR_FAILED, t)
+						logs.Bill(
+							"Pull_Nats_Fail",
+							"streamName:%s, sub:%s, consumer:%s, err:%+v",
+							streamName, sub, consumer, err,
+						)
+						continue
+					}
+
+					var reqs []*R
+					for _, msg := range msgs {
+						var (
+							qgreq frame.NatsTransMsg
+							req   R
+						)
+
+						if err := jsoniter.Unmarshal(msg.Data, &qgreq); err != nil {
+							t := time.Since(start)
+							frame.ReportDoRpcStat("Unmarshal", streamKey, frame.ESMR_FAILED, t)
+							logs.Bill(
+								"Pull_Nats_Fail",
+								"streamName:%s, sub:%s, consumer:%s, data:%s, err:%+v",
+								streamName, sub, consumer, string(msg.Data), err,
+							)
+							continue
+						}
+
+						if err := jsoniter.Unmarshal(qgreq.MsgBody, &req); err != nil {
+							t := time.Since(start)
+							frame.ReportDoRpcStat("Unmarshal", streamKey, frame.ESMR_FAILED, t)
+							logs.Bill(
+								"Pull_Nats_Fail",
+								"streamName:%s, sub:%s, consumer:%s, data:%s, err:%+v",
+								streamName, sub, consumer, string(msg.Data), err,
+							)
+							continue
+						}
+
+						reqs = append(reqs, &req)
+					}
+
+					if err := logic(reqs); err != nil {
+						logs.Bill(
+							"Pull_Nats_Fail",
+							"streamName:%s, sub:%s, consumer:%s, data:%+v, err:%+v",
+							streamName, sub, consumer, reqs, err,
+						)
+						continue
+					}
+
+					for _, msg := range msgs {
+						doTime := time.Now()
+						if pubTime := msg.Header.Get("PublishTime"); pubTime != "" {
+							if pt, err := time.Parse(time.RFC3339Nano, pubTime); err == nil {
+								stat.ReportStat(
+									"Nats.PullStream."+streamName+"."+sub,
+									0,
+									doTime.Sub(pt),
+								)
+							}
+						}
+						msg.Ack()
+					}
+
+					costMsec := time.Since(start).Milliseconds()
+					if 2*len(msgs) < op.BatchSize && costMsec < int64(op.MaxWaitMsec) {
+						time.Sleep(
+							time.Duration(int64(op.MaxWaitMsec)-costMsec) *
+								time.Millisecond,
+						)
 					}
 				}
-				msg.Ack()
-			}
-			costMsec := time.Since(start).Milliseconds()
-			if 2*len(msgs) < op.BatchSize && costMsec < int64(op.MaxWaitMsec) {
-				// 如果取到数据较少就等待
-				time.Sleep(time.Duration(int64(op.MaxWaitMsec)-costMsec) * time.Millisecond)
-			}
-		}
-	})
+			})
+		}(
+			subs,
+			streamkey,
+			streamName,
+			sub,
+			consumer,
+			*op, // ★ 拷贝值，避免共享修改
+			logic,
+		)
+	}
+
 	return nil
 }

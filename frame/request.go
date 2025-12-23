@@ -155,15 +155,13 @@ type NatsMsg struct {
 	MsgData []byte  `json:"Data,omitempty"`
 	Conn    *nats.Conn
 	NatsMsg *nats.Msg `json:"-,omitempty"`
-	//NatsMsgStr *string   `json:"-"`
-	Reply *NatsMsg `json:"-,omitempty"`
+	Reply   *NatsMsg  `json:"-,omitempty"`
 
 	ExtValue int32 `json:"-,omitempty"`
 
 	Cookie      []string `json:"cookie"`
 	IsSetCookie bool     `json:"-,omitempty"`
-	//Host   string   `json:"host"`
-	RpcxConn net.Conn
+	RpcxConn    net.Conn
 }
 
 func (m *NatsMsg) AddCookie(k, v string, maxAges ...int) {

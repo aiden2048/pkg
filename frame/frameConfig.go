@@ -7,6 +7,7 @@ import (
 	"github.com/aiden2048/pkg/utils"
 
 	logger2 "github.com/aiden2048/pkg/frame/logs/logger"
+
 	runtimex "github.com/aiden2048/pkg/frame/runtime"
 	"go.etcd.io/etcd/client/pkg/v3/fileutil"
 
@@ -181,14 +182,6 @@ func InitConfig(svrName string, opt ...*FrameOption) error {
 	baselib.RegisterReloadFunc(LoadSystemConfig)
 	logs.SetServerId(GetServerID())
 
-	if err := StartLoadNatsServices(); err != nil {
-		logs.Errorf("StartLoadNatsServices error:%s", err)
-		logs.Errorf("Run exit")
-		//等待一会, 让日志打印出去
-		time.Sleep(sleepTime)
-		return err
-	}
-
 	stat.SetAdditionMsgReport(GetServerName(), additionalMsgStat)
 	return nil
 }
@@ -220,6 +213,9 @@ func LoadFrameConfig() error {
 		if err := LoadEtcdConfig(); err != nil {
 			return err
 		}
+	}
+	if err := LoadNatsConfig(); err != nil {
+		return err
 	}
 	logs.Infof("Read Etcd Config:%+v", etcdConfig)
 	if defFrameOption.RpcCallTimeout <= 0 {
@@ -253,14 +249,6 @@ func LoadFrameConfig() error {
 }
 
 func LoadSystemConfig() error {
-
-	// 不开启 nats
-
-	if err := LoadNatsConfig(); err != nil {
-		return err
-	}
-
-	logs.Infof("Read Nats Config:%+v", natsConfig)
 
 	return nil
 }

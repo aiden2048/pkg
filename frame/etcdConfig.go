@@ -83,17 +83,22 @@ func LoadEtcdConfig() error {
 			logs.Print("MapCenterEtcdAddrs Etcd", k, "配置错误，请检查")
 			continue
 		}
-		if GetPlatformId() >= 1000 && k.IsMix && k.PlatId != GetPlatformId() {
-			logs.Print("MapCenterEtcdAddrs Etcd", k, "这是其他通服组etcd, 不需要连")
-			continue
+		if IsMix() {
+			// 通服进程，只链接自己大组etcd
+			if k.IsMix && k.PlatId/100 == GetPlatformId()/100 {
+				sort.Strings(k.EtcdAddr)
+				newConf.MapCenterEtcdAddrs[k.PlatId] = k
+				logs.Print("通服进程 MapCenterEtcdAddrs 添加center Etcd配置", k)
+			}
+		} else {
+			// 非通服进程，只链接自己组的etcd和地区通服etcd
+			if (k.IsMix && k.PlatId/100 == GetPlatformId()/100) || k.PlatId == GetPlatformId() {
+				sort.Strings(k.EtcdAddr)
+				newConf.MapCenterEtcdAddrs[k.PlatId] = k
+				logs.Print("MapCenterEtcdAddrs 添加center Etcd配置", k)
+			}
 		}
-		if !GetFrameOption().EnableAllAreaMix && GetPlatformId() >= 1000 && GetPlatformId()/1000 != k.PlatId/1000 {
-			logs.Print("MapCenterEtcdAddrs Etcd", k, "跟本组不通服, 不加入到通服配置")
-			continue
-		}
-		sort.Strings(k.EtcdAddr)
-		logs.Print("MapCenterEtcdAddrs 添加center Etcd配置", k)
-		newConf.MapCenterEtcdAddrs[k.PlatId] = k
+
 	}
 
 	etcdConfig = newConf

@@ -72,11 +72,6 @@ func HandleLogic[R any, T any](r *frame.NatsMsg, logic func(req *R) (resp *T, er
 		return frame.ESMR_FAILED
 	}
 
-	/*if frame.IsTestUid(r.GetUid()) {
-		r.SendResponseEcrypt(0, "", resp)
-	} else {
-		r.SendResponse(0, "", resp)
-	}*/
 	if r.GetSession().Channel > 0 {
 		r.GetSession().Check = r.GetCheck()
 	}
@@ -158,7 +153,7 @@ func Request[T any, H any](group, funcName string, req_param *T, needRsp bool, p
 		rsppara = new(H)
 		err = jsoniter.Unmarshal(rsp.GetParam(), &rsppara)
 		if err != nil {
-			logs.PrintErr("Request", group, funcName, "respone from", rsp.Sess, "err:", err, "Unmarshal", rsp.GetParam())
+			logs.PrintError("Request", group, funcName, "respone from", rsp.Sess, "err:", err, "Unmarshal", rsp.GetParam())
 			return nil, errorMsg.RspError.Copy(err)
 		}
 		return rsppara, nil

@@ -7,6 +7,7 @@ import (
 
 	"github.com/aiden2048/pkg/frame/logs"
 	"github.com/aiden2048/pkg/frame/runtime"
+	"github.com/aiden2048/pkg/frame/stat"
 	"github.com/aiden2048/pkg/utils"
 	"github.com/aiden2048/pkg/utils/baselib"
 	"github.com/alitto/pond"
@@ -30,7 +31,7 @@ var isReporting = baselib.Map{}
 
 func ReportLog(ltype, ltag, lmsg string) {
 	// 组包上报统计数据
-	if GetNatsConn() == nil {
+	if GetNatsConn(GetPlatformId()) == nil {
 		logs.Importantf("nats 还没起来， 不能上报")
 		return
 	}
@@ -81,4 +82,8 @@ func ReportToMonitor(funcName string, req interface{}) {
 		SendToMonitor("monitor", funcName, req)
 		isReporting.Delete(gpid)
 	})
+}
+
+func ReportBillStat(billName string) {
+	stat.ReportStat("bill:"+billName, 0, 0)
 }
