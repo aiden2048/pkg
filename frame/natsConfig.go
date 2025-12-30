@@ -1,9 +1,10 @@
 package frame
 
 import (
-	"log"
 	"os"
+	"path/filepath"
 	"sort"
+	"sync"
 
 	"github.com/aiden2048/pkg/frame/logs"
 
@@ -21,20 +22,28 @@ type AllNatsConfig struct {
 	AllNats []*NatsConfig
 }
 
-var natsConfig = &AllNatsConfig{}
+var (
+	natsConfig = &AllNatsConfig{}
+	natsMu     sync.RWMutex
+)
+
+func GetNatsConfig() *AllNatsConfig {
+	natsMu.RLock()
+	defer natsMu.RUnlock()
+	return natsConfig
+}
 
 func LoadNatsConfig() error {
 	newConf := &AllNatsConfig{}
 
 	fkey := "NatsConfig.toml"
-	filename := GetGlobalConfigDir() + fkey
+	filename := filepath.Join(GetGlobalConfigDir(), fkey)
 	_, err := toml.DecodeFile(filename, newConf)
 	if err != nil {
 		if !os.IsNotExist(err) {
 			logs.Errorf("DecodeFile:%s failed:%s", fkey, err.Error())
 		}
 		if err := LoadConfigFromMongo(fkey, newConf); err != nil {
-			log.Printf("LoadConfigFromMongo[%s]: %+v", fkey, err)
 			logs.Errorf("LoadConfigFromMongo[%s]: %+v", fkey, err)
 			return err
 		}
@@ -43,14 +52,15 @@ func LoadNatsConfig() error {
 	for _, k := range newConf.AllNats {
 
 		needStart := false
+		platID := GetPlatformId()
 
 		if IsMix() {
-			if k.IsMix && k.PlatId/100 == GetPlatformId()/100 {
+			if k.IsMix && k.PlatId/100 == platID/100 {
 				needStart = true
 			}
 		} else {
-			if (k.IsMix && k.PlatId/100 == GetPlatformId()/100) ||
-				k.PlatId == GetPlatformId() {
+			if (k.IsMix && k.PlatId/100 == platID/100) ||
+				k.PlatId == platID {
 				needStart = true
 			}
 		}
@@ -68,6 +78,10 @@ func LoadNatsConfig() error {
 
 		logs.Infof("Save Nats Config:%+v", k)
 	}
+
+	natsMu.Lock()
 	natsConfig = newConf
+	natsMu.Unlock()
+
 	return nil
 }

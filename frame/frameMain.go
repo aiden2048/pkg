@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 	"runtime"
 	"strings"
 	"sync"
@@ -55,26 +56,17 @@ func init() {
 
 	fmt.Printf("\n+++++===============+++++\n")
 
-	for i := 0; i < len(os.Args); i++ {
-		if strings.ToLower(os.Args[i]) == "-d" || strings.ToLower(os.Args[i]) == "dbg" {
+	for _, arg := range os.Args {
+		argLower := strings.ToLower(arg)
+		if argLower == "-d" || argLower == "dbg" {
 			_debug_mode = true
-			break
-		}
-	}
-
-	for i := 0; i < len(os.Args); i++ {
-		if strings.ToLower(os.Args[i]) == "dev" || strings.ToLower(os.Args[i]) == "dev" {
+		} else if argLower == "dev" {
 			_dev_mode = true
-			break
+		} else if argLower == "mix" {
+			_mix_mode = true
 		}
 	}
 
-	for i := 0; i < len(os.Args); i++ {
-		if strings.ToLower(os.Args[i]) == "mix" {
-			_mix_mode = true
-			break
-		}
-	}
 	plat := flag.Int("plat", 0, "service plat")
 	flag.Parse()
 	_Plat_id = *plat
@@ -87,10 +79,13 @@ func IsTestServer() bool {
 	return _global_config.IsTestServer
 }
 func GetGlobalConfigDir(plat_id ...int32) string {
+	var pid int32
 	if len(plat_id) > 0 {
-		return fmt.Sprintf("../GlobalConfig/%d/", plat_id[0])
+		pid = plat_id[0]
+	} else {
+		pid = int32(_Plat_id)
 	}
-	return fmt.Sprintf("../GlobalConfig/%d/", _Plat_id)
+	return filepath.Join("..", "GlobalConfig", fmt.Sprintf("%d", pid)) + string(os.PathSeparator)
 }
 func IsDebug() bool {
 	return _debug_mode || _dev_mode /*|| _global_config.IsTestServer*/

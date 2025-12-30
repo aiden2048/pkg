@@ -2,8 +2,8 @@ package frame
 
 import (
 	"fmt"
-	"log"
 	"os"
+	"path/filepath"
 
 	"github.com/aiden2048/pkg/frame/logs"
 	"github.com/aiden2048/pkg/utils"
@@ -49,27 +49,24 @@ func LoadRedisConfig() (error, map[string]bool) {
 
 	newConf := &RedisCfg{}
 	fkey := "RedisConfig.toml"
-	filename := GetGlobalConfigDir() + fkey
+	filename := filepath.Join(GetGlobalConfigDir(), fkey)
 	_, err := toml.DecodeFile(filename, newConf)
 	if err != nil {
 		if !os.IsNotExist(err) {
 			logs.Errorf("DecodeFile:%s failed:%s", fkey, err.Error())
 		}
 		if err := LoadConfigFromMongo(fkey, newConf); err != nil {
-			log.Printf("LoadConfigFromMongo[%s]: %+v", fkey, err)
 			logs.Errorf("LoadConfigFromMongo[%s]: %+v", fkey, err)
 			return err, bret
 		}
 	}
 	if len(newConf.Redis) == 0 {
 		err := fmt.Errorf("加载redis配置失败, 没有任何redis配置%s", newConf)
-		log.Printf(err.Error())
 		logs.Errorf(err.Error())
 		return err, bret
 	}
 	if v, ok := newConf.Redis["default"]; !ok || len(v.Servers) == 0 {
 		err := fmt.Errorf("加载redis配置失败, 没有默认的redis配置%s", newConf)
-		log.Printf(err.Error())
 		logs.Errorf(err.Error())
 		return err, bret
 	}

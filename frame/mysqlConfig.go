@@ -1,8 +1,8 @@
 package frame
 
 import (
-	"log"
 	"os"
+	"path/filepath"
 
 	"github.com/aiden2048/pkg/frame/logs"
 
@@ -36,7 +36,7 @@ func GetMysqlConfig() *MysqlCfg {
 func LoadMysqlConfig() error {
 	new_cfg := &MysqlCfg{}
 	fkey := "MysqlConfig.toml"
-	configPath := GetGlobalConfigDir() + fkey
+	configPath := filepath.Join(GetGlobalConfigDir(), fkey)
 	if _, err := os.Stat(configPath); err != nil {
 		logs.Errorf("Load configPath: %+v", err)
 		return err
@@ -44,7 +44,6 @@ func LoadMysqlConfig() error {
 	if _, err := toml.DecodeFile(configPath, new_cfg); err != nil {
 		logs.Errorf("Load configPath: %+v", err)
 		if err := LoadConfigFromMongo(fkey, new_cfg); err != nil {
-			log.Printf("LoadConfig From Mongo[%s]: %+v", fkey, err)
 			logs.Errorf("LoadConfig From Mongo[%s]: %+v", fkey, err)
 			return err
 		}
