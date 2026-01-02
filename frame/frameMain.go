@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"runtime"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -27,7 +28,6 @@ var g_deferFuncs []func()
 
 var _debug_mode = false
 var _dev_mode = false
-var _mix_mode = false
 var _Plat_id = 0
 var once = &sync.Once{}
 
@@ -54,31 +54,18 @@ func init() {
 
 	fmt.Printf("\n+++++===============+++++\n")
 
-	for i := 0; i < len(os.Args); i++ {
-		if strings.ToLower(os.Args[i]) == "-d" || strings.ToLower(os.Args[i]) == "dbg" {
-			_debug_mode = true
-			break
-		}
-	}
+	_debug_mode = console.OptBool("dbg")
+	_dev_mode = console.OptBool("dev")
 
-	for i := 0; i < len(os.Args); i++ {
-		if strings.ToLower(os.Args[i]) == "dev" || strings.ToLower(os.Args[i]) == "dev" {
-			_dev_mode = true
-			break
-		}
+	if v := os.Getenv("PLAT_ID"); v != "" {
+		_Plat_id, _ = strconv.Atoi(v)
+	} else {
+		_Plat_id = console.OptInt("plat")
 	}
-
-	for i := 0; i < len(os.Args); i++ {
-		if strings.ToLower(os.Args[i]) == "mix" {
-			_mix_mode = true
-			break
-		}
-	}
-	console.OptInt("plat")
 
 	_Plat_id = console.OptInt("plat")
 	fmt.Println("启动分组:", _Plat_id)
-	fmt.Printf("_Plat_id = %d, _debug_mode = %t, _dev_mode:%t, _mix_mode = %t\n", _Plat_id, _debug_mode, _dev_mode, _mix_mode)
+	fmt.Printf("_Plat_id = %d, _debug_mode = %t, _dev_mode:%t", _Plat_id, _debug_mode, _dev_mode)
 }
 
 func IsTestServer() bool {
@@ -97,9 +84,7 @@ func IsDebug() bool {
 func IsDev() bool {
 	return _dev_mode
 }
-func IsMix() bool {
-	return _mix_mode
-}
+
 func IsTool(t string) bool {
 	for i := 0; i < len(os.Args); i++ {
 		if strings.ToLower(os.Args[i]) == t {
