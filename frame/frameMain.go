@@ -54,16 +54,14 @@ func init() {
 
 	fmt.Printf("\n+++++===============+++++\n")
 
-	_debug_mode = console.OptBool("dbg")
-	_dev_mode = console.OptBool("dev")
+	_debug_mode = console.OptBoolDefault("dbg", false)
+	_dev_mode = console.OptBoolDefault("dev", false)
 
 	if v := os.Getenv("PLAT_ID"); v != "" {
 		_Plat_id, _ = strconv.Atoi(v)
 	} else {
-		_Plat_id = console.OptInt("plat")
+		_Plat_id = console.OptIntDefault("plat", 0)
 	}
-
-	_Plat_id = console.OptInt("plat")
 	fmt.Println("启动分组:", _Plat_id)
 	fmt.Printf("_Plat_id = %d, _debug_mode = %t, _dev_mode:%t", _Plat_id, _debug_mode, _dev_mode)
 }
