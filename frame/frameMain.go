@@ -2,7 +2,6 @@
 package frame
 
 import (
-	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -17,6 +16,7 @@ import (
 	"github.com/aiden2048/pkg/frame/logs"
 	"github.com/aiden2048/pkg/utils"
 	"github.com/aiden2048/pkg/utils/baselib"
+	"github.com/aiden2048/pkg/utils/console"
 )
 
 const DEFAULT_RPC_REQUEST_SECONDS = 5
@@ -74,10 +74,10 @@ func init() {
 			break
 		}
 	}
-	plat := flag.Int("plat", 0, "service plat")
-	flag.Parse()
-	_Plat_id = *plat
-	fmt.Println("启动分组:", *plat)
+	console.OptInt("plat")
+
+	_Plat_id = console.OptInt("plat")
+	fmt.Println("启动分组:", _Plat_id)
 	fmt.Printf("_Plat_id = %d, _debug_mode = %t, _dev_mode:%t, _mix_mode = %t\n", _Plat_id, _debug_mode, _dev_mode, _mix_mode)
 }
 
