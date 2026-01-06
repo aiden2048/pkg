@@ -2,7 +2,6 @@ package frame
 
 import (
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/aiden2048/pkg/utils"
@@ -62,7 +61,7 @@ func GetStrServerID() string {
 }
 
 func GetPlatformId() int32 {
-	return GetGlobalConfig().PlatformID
+	return int32(_Plat_id)
 }
 
 func GetCallTimeout() int32 {
@@ -120,11 +119,11 @@ func InitConfig(svrName string, opt ...*FrameOption) error {
 	}
 
 	//platid
-	if !defFrameOption.DisableRpcx || !defFrameOption.DisableNats {
-		if err := LoadPlatConfig(); err != nil {
-			return err
-		}
-	}
+	// if !defFrameOption.DisableRpcx || !defFrameOption.DisableNats {
+	// 	if err := LoadPlatConfig(); err != nil {
+	// 		return err
+	// 	}
+	// }
 
 	// 加载框架配置
 	server_config.ServerName = svrName
@@ -143,7 +142,7 @@ func InitConfig(svrName string, opt ...*FrameOption) error {
 		if server_config.ServerID <= 0 {
 
 			//GameNames 几个进程固定ID
-			nPlatformId := int64(_global_config.PlatformID) * 100000
+			nPlatformId := int64(_Plat_id) * 100000
 			if utils.InArray(GameNames, GetServerName()) {
 				//nPlatformId := int64(_global_config.PlatformID) * 10000
 				server_config.ServerID = int32(nPlatformId)
@@ -190,7 +189,7 @@ func InitConfig(svrName string, opt ...*FrameOption) error {
 		defFrameOption.EnableMixServer = false
 	}
 	//给top组专用的, 因为top的组ID<100, 如果不强制指定EnableAllAreaMix,不能启用通服
-	if defFrameOption.EnableMixServer && GetGlobalConfig().PlatformID < 1000 && !defFrameOption.EnableAllAreaMix {
+	if defFrameOption.EnableMixServer && _Plat_id < 1000 && !defFrameOption.EnableAllAreaMix {
 		logs.Errorf("platid:%d 本组不能启用MixServer,必须开启EnableMixServer", GetPlatformId())
 		fmt.Printf("platid:%d 本组不能启用MixServer, 必须开启EnableMixServer\n", GetPlatformId())
 		defFrameOption.EnableMixServer = false
@@ -234,25 +233,25 @@ func InitConfig(svrName string, opt ...*FrameOption) error {
 	return nil
 }
 
-func LoadPlatConfig() error {
-	newConf := &TGlobalConfig{}
-	fkey := "Platform.toml"
-	filename := GetGlobalConfigDir() + fkey
-	_, err := toml.DecodeFile(filename, newConf)
-	if err != nil {
-		log.Printf("LoadPlatConfig DecodeFile:%s failed:%s", fkey, err.Error())
-		return err
-	}
-	_global_config = newConf
-	return nil
-}
+// func LoadPlatConfig() error {
+// 	newConf := &TGlobalConfig{}
+// 	fkey := "Platform.toml"
+// 	filename := GetGlobalConfigDir() + fkey
+// 	_, err := toml.DecodeFile(filename, newConf)
+// 	if err != nil {
+// 		log.Printf("LoadPlatConfig DecodeFile:%s failed:%s", fkey, err.Error())
+// 		return err
+// 	}
+// 	_global_config = newConf
+// 	return nil
+// }
 
 func LoadBootConfig() error {
-	if !defFrameOption.DisableRpcx || !defFrameOption.DisableNats {
-		if err := LoadPlatConfig(); err != nil {
-			return err
-		}
-	}
+	// if !defFrameOption.DisableRpcx || !defFrameOption.DisableNats {
+	// 	if err := LoadPlatConfig(); err != nil {
+	// 		return err
+	// 	}
+	// }
 	if defFrameOption.EnableMysql {
 		err := LoadMysqlConfig()
 		if err != nil {
