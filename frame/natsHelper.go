@@ -116,7 +116,7 @@ func RpcxCall(mod string, svrid int32, cmd string, req *NatsMsg, args ...int32) 
 	}
 	//检查通过rpcx请求
 	if CheckRpcxService(platId, mod, svrid, cmd) {
-		m, e := CallRpcx(platId, mod, cmd, svrid, req, timeout)
+		m, e := CallRpcx(platId, req.GetUid(), mod, cmd, svrid, req, timeout)
 		if etcdConfig.IsRpcxOnly() || e.ErrorNo() != errorMsg.NoService.ErrorNo() {
 			return m, e
 		}

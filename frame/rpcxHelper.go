@@ -536,9 +536,9 @@ func CallRpcxForTrans(platId int32, sess *Session, sname, fname string, svrid in
 	return rsp, errs
 }
 
-func CallRpcx(platId int32, sname, fname string, svrid int32, req interface{}, timeout time.Duration) (*NatsMsg, *errorMsg.ErrRsp) {
+func CallRpcx(platId int32, uid uint64, sname, fname string, svrid int32, req interface{}, timeout time.Duration) (*NatsMsg, *errorMsg.ErrRsp) {
 	rsp := &NatsMsg{}
-	rspBuf, errs := rpcxCall(0, platId, sname, fname, svrid, req, timeout, true)
+	rspBuf, errs := rpcxCall(uid, platId, sname, fname, svrid, req, timeout, true)
 	if errs != nil {
 		//logs.Errorf("CallRpcx  plat:%d,%s.%s.%d  failed:%s", platId, sname, fname, svrid, err.Error())
 		return rsp, errs
