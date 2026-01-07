@@ -10,7 +10,7 @@ import (
 )
 
 type TGlobalConfig struct {
-	PlatformID      int32  //平台ID
+	//PlatformID      int32  //平台ID
 	EnableMixServer bool   //该组是否可以启用大通服
 	MixSuffix       string //通服的分组前缀
 	IsTestServer    bool   //是否测试服
@@ -39,10 +39,11 @@ func LoadGlobalConfig() error {
 	}
 
 	_global_config = newConf
-	_global_config.PlatformID = int32(_Plat_id)
+
 	if _global_config.MixSuffix == "" {
 		_global_config.MixSuffix = "Mix"
 	}
+
 	logs.Debugf("_global_config:%+v", _global_config)
 
 	return nil

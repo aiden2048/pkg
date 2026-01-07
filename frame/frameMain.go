@@ -2,13 +2,13 @@
 package frame
 
 import (
-	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -19,6 +19,7 @@ import (
 	logger2 "github.com/aiden2048/pkg/frame/logs/logger"
 	"github.com/aiden2048/pkg/utils"
 	"github.com/aiden2048/pkg/utils/baselib"
+	"github.com/aiden2048/pkg/utils/console"
 )
 
 const DEFAULT_RPC_REQUEST_SECONDS = 5
@@ -29,7 +30,6 @@ var g_deferFuncs []func()
 
 var _debug_mode = false
 var _dev_mode = false
-var _mix_mode = false
 var _Plat_id = 0
 var once = &sync.Once{}
 
@@ -56,23 +56,16 @@ func init() {
 
 	fmt.Printf("\n+++++===============+++++\n")
 
-	for _, arg := range os.Args {
-		argLower := strings.ToLower(arg)
-		if argLower == "-d" || argLower == "dbg" {
-			_debug_mode = true
-		} else if argLower == "dev" {
-			_dev_mode = true
-		} else if argLower == "mix" {
-			_mix_mode = true
-		}
-	}
+	_debug_mode = console.OptBoolDefault("dbg", false)
+	_dev_mode = console.OptBoolDefault("dev", false)
 
-	plat := flag.Int("plat", 0, "service plat")
-	flag.Parse()
-	_Plat_id = *plat
-	_global_config.PlatformID = int32(_Plat_id)
-	fmt.Println("启动分组:", *plat)
-	fmt.Printf("_Plat_id = %d, _debug_mode = %t, _dev_mode:%t, _mix_mode = %t\n", _Plat_id, _debug_mode, _dev_mode, _mix_mode)
+	if v := os.Getenv("PLAT_ID"); v != "" {
+		_Plat_id, _ = strconv.Atoi(v)
+	} else {
+		_Plat_id = console.OptIntDefault("plat", 0)
+	}
+	fmt.Println("启动分组:", _Plat_id)
+	fmt.Printf("_Plat_id = %d, _debug_mode = %t, _dev_mode:%t", _Plat_id, _debug_mode, _dev_mode)
 }
 
 func IsTestServer() bool {
@@ -94,9 +87,7 @@ func IsDebug() bool {
 func IsDev() bool {
 	return _dev_mode
 }
-func IsMix() bool {
-	return _mix_mode
-}
+
 func IsTool(t string) bool {
 	for i := 0; i < len(os.Args); i++ {
 		if strings.ToLower(os.Args[i]) == t {

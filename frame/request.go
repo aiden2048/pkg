@@ -121,8 +121,8 @@ func NewSessionOnly() *Session {
 }
 
 type MsgBody struct {
-	Mod   string      `json:"_mod,omitempty"`
-	Func  string      `json:"_func,omitempty"`
+	Mod   string      `json:"_srv,omitempty"`
+	Func  string      `json:"_act,omitempty"`
 	Check interface{} `json:"_check,omitempty"`
 
 	Seq   interface{} `json:"_sn,omitempty"`

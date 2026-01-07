@@ -58,7 +58,7 @@ func GetStrServerID() string {
 }
 
 func GetPlatformId() int32 {
-	return GetGlobalConfig().PlatformID
+	return int32(_Plat_id)
 }
 
 func GetCallTimeout() int32 {
@@ -115,7 +115,8 @@ func InitConfig(svrName string, opt ...*FrameOption) error {
 		//进程ID不超过九位数,所以做了组ID精简
 		if server_config.ServerID <= 0 {
 
-			nPlatformId := int64(_global_config.PlatformID) * 100000
+			//GameNames 几个进程固定ID
+			nPlatformId := int64(_Plat_id) * 100000
 			if utils.InArray(GameNames, GetServerName()) {
 				server_config.ServerID = int32(nPlatformId)
 			} else {
@@ -156,7 +157,7 @@ func InitConfig(svrName string, opt ...*FrameOption) error {
 		defFrameOption.EnableMixServer = false
 	}
 	//给top组专用的, 因为top的组ID<100, 如果不强制指定EnableAllAreaMix,不能启用通服
-	if defFrameOption.EnableMixServer && GetGlobalConfig().PlatformID < 1000 && !defFrameOption.EnableAllAreaMix {
+	if defFrameOption.EnableMixServer && _Plat_id < 1000 && !defFrameOption.EnableAllAreaMix {
 		logs.Errorf("platid:%d 本组不能启用MixServer,必须开启EnableMixServer", GetPlatformId())
 		fmt.Printf("platid:%d 本组不能启用MixServer, 必须开启EnableMixServer\n", GetPlatformId())
 		defFrameOption.EnableMixServer = false
