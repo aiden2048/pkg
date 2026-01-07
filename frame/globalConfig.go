@@ -37,27 +37,15 @@ func LoadGlobalConfig() error {
 			return err
 		}
 	}
-	//plat := _global_config.PlatformID
-	mix := _global_config.EnableMixServer
-	suffix := _global_config.MixSuffix
-
-	isTest := _global_config.IsTestServer
 
 	_global_config = newConf
-	//_global_config.PlatformID = plat
-	_global_config.EnableMixServer = mix
-	_global_config.MixSuffix = suffix
+
 	if _global_config.MixSuffix == "" {
 		_global_config.MixSuffix = "Mix"
 	}
-	_global_config.IsTestServer = isTest
-	//if GetFrameOption().DisableHttpProxy == true {
-	//	_global_config.HttpProxyAddr = nil
-	//}
-	logs.LogDebug("_global_config:%+v", _global_config)
-	//if err := LoadProxyConfigs(); err != nil{
-	//	return err
-	//}
+
+	logs.Debugf("_global_config:%+v", _global_config)
+
 	return nil
 }
 
