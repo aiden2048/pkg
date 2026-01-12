@@ -146,7 +146,9 @@ func RpcxCall(mod string, svrid int32, cmd string, req *NatsMsg, args ...int32) 
 }
 
 func NatsCallForTrans(mod string, svrid int32, cmd string, req *NatsMsg, args ...int32) (rsp *NatsTransMsg, err *errorMsg.ErrRsp) {
-	req.Sess.PlatId = GetPlatformId()
+	if req.Sess.PlatId <= 0 {
+		req.Sess.PlatId = GetPlatformId()
+	}
 	req.Sess.SvrFE = GetServerName()
 	req.Sess.SvrID = GetServerID()
 	req.Sess.Time = time.Now().Unix()
