@@ -108,7 +108,7 @@ func StartPlatMgoDb(wl WriteC, platId int32, dbs ...int) (err error) {
 		_, ok := confDb.Load(platId)
 
 		if !ok {
-			cDb, err := startReal(frame.GetMgoCoinfig(frame.GetPlatformId()).Conf, wl)
+			cDb, err := startReal(frame.GetMgoCoinfig(platId).Conf, wl)
 			if err != nil {
 				return err
 			}
@@ -118,7 +118,7 @@ func StartPlatMgoDb(wl WriteC, platId int32, dbs ...int) (err error) {
 	if len(dbs) == 0 || utils.InArray(dbs, LogKey) {
 		_, ok := logDb.Load(platId)
 		if !ok {
-			lDb, err := startReal(frame.GetMgoCoinfig(frame.GetPlatformId()).Log, wl)
+			lDb, err := startReal(frame.GetMgoCoinfig(platId).Log, wl)
 			if err != nil {
 				return err
 			}
@@ -128,7 +128,7 @@ func StartPlatMgoDb(wl WriteC, platId int32, dbs ...int) (err error) {
 	if utils.InArray(dbs, ImageRepositoryKey) {
 		_, ok := imageRepositoryDb.Load(platId)
 		if !ok {
-			iDb, err := startReal(frame.GetMgoCoinfig(frame.GetPlatformId()).ImageRepository, wl)
+			iDb, err := startReal(frame.GetMgoCoinfig(platId).ImageRepository, wl)
 			if err != nil {
 				return err
 			}
@@ -140,7 +140,7 @@ func StartPlatMgoDb(wl WriteC, platId int32, dbs ...int) (err error) {
 	if utils.InArray(dbs, TopKey) {
 		_, ok := topDb.Load(platId)
 		if !ok {
-			tDb, err := startReal(frame.GetMgoCoinfig(frame.GetPlatformId()).Top, wl)
+			tDb, err := startReal(frame.GetMgoCoinfig(platId).Top, wl)
 			if err != nil {
 				return err
 			}
