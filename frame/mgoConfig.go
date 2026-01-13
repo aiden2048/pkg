@@ -52,7 +52,11 @@ type MgoCfg struct {
 
 var mgo_configs = &sync.Map{}
 
-func GetMgoCoinfig(plat_id int32) *MgoCfg {
+func GetMgoCoinfig(plat_ids ...int32) *MgoCfg {
+	plat_id := _Plat_id
+	if len(plat_ids) > 0 {
+		plat_id = plat_ids[0]
+	}
 	if val, ok := mgo_configs.Load(plat_id); ok {
 		if cfg, ok := val.(*MgoCfg); ok {
 			return cfg
