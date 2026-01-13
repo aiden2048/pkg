@@ -3,11 +3,15 @@ package frame
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/aiden2048/pkg/public/errorMsg"
+	jsoniter "github.com/json-iterator/go"
+	"github.com/smallnest/rpcx/client"
 
 	"github.com/aiden2048/pkg/frame/logs"
+	"github.com/aiden2048/pkg/frame/stat"
 
 	"time"
 )
@@ -115,6 +119,121 @@ func HandlerConnCmdByServerName(cmd string, handler func(context.Context, *NatsM
 	if err := RegisterRpcxHandlerBySName(httpMod, cmd, handler, needP2p); err != nil {
 		return err
 	}
+	logs.Importantf("rpcxServer.RegisterRpcxWsHandler %s.%s", sname, fname)
+	logs.WriteBill("RegisterFunctionName", "ok|rpcxServer.RegisterRpcxWsHandler %s.%s", sname, fname)
+	return err
+}
+
+func rpcxCall(uid uint64, platId int32, sname, fname string, svrid int32, req interface{}, timeout time.Duration, needReply bool) (*TRpcxMsg, *errorMsg.ErrRsp) {
+	if platId <= 0 {
+		platId = GetPlatformId()
+	}
+	if svrid > 0 {
+		sname = fmt.Sprintf("%s.%d", sname, svrid)
+	}
+
+	xclient := getXClient(uid, platId, sname)
+	if xclient == nil {
+		logs.Debugf("rpcxCall getXClient is nil, platId:%d, sname:%s, uid:%d", platId, sname, uid)
+		return nil, errorMsg.NoService
+	}
+
+	start := time.Now()
+	reqBuf := &TRpcxMsg{}
+	var err error
+	reqBuf.Data, err = jsoniter.Marshal(req)
+	if err != nil {
+		logs.Errorf("rpcxClient.Call %s.%s failed:%s,uid:%d", sname, fname, err.Error(), uid)
+		return nil, errorMsg.ReqError.Copy(err)
+	}
+	//timeout = time.Second
+	if timeout <= 0 || timeout > 5*time.Minute {
+		timeout = GetRpcCallTimeout()
+	}
+	ctx := context.Background()
+	var rspBuf *TRpcxMsg
+	if needReply {
+		rspBuf = &TRpcxMsg{}
+		ctx, _ = context.WithTimeout(context.Background(), timeout)
+		err = xclient.Call(ctx, fname, reqBuf, rspBuf)
+	} else {
+		err = xclient.Call(ctx, fname, reqBuf, nil)
+	}
+	ret := int(ESMR_SUCCEED)
+	cost := time.Since(start)
+
+	if !strings.Contains(fname, "HeartBeat") && IsDebug() {
+		logs.Infof("rpc uid:%d plat:%d, %s.%s,%t cost:%+v req:%+v, error:%+v", uid, platId, sname, fname, needReply, cost, req, err)
+	}
+	//logs.LogDebug("RpcxCall fname:%s, err:%+v", fname, err)
+	var errs *errorMsg.ErrRsp
+	if err != nil {
+		//不打conn的404错误
+		errs = errorMsg.ReqError.Copy(err)
+		if err == context.DeadlineExceeded {
+			errs = errorMsg.TimeOut.Copy(err) //.Return("x-dead")
+		} else if err == client.ErrXClientNoServer || err == client.ErrXClientShutdown || err == client.ErrServerUnavailable {
+			errs = errorMsg.NoService.Copy(err) //.Return("x-nos")
+		} else if strings.Contains(err.Error(), "rpcx: can't find") ||
+			strings.Contains(err.Error(), "connect: connection refused") ||
+			strings.Contains(err.Error(), "dial tcp") {
+			errs = errorMsg.NoService.Copy(err) //.Return("x-dial")
+		} else {
+			errs = errorMsg.ReqError.Copy(err) //.Return("Unknown")
+		}
+		ret = int(ESMR_FAILED)
+	}
+
+	stat.ReportStat("rp:rpcx.call."+sname+"."+fname+"."+strconv.Itoa(int(platId)), ret, cost)
+	return rspBuf, errs
+}
+
+func CallRpcxForTrans(platId int32, sess *Session, sname, fname string, svrid int32, req interface{}, timeout time.Duration) (*NatsTransMsg, *errorMsg.ErrRsp) {
+	rsp := &NatsTransMsg{}
+	rspBuf, errs := rpcxCall(sess.GetUid(), platId, sname, fname, svrid, req, timeout, true)
+	if errs != nil {
+		// logs.Errorf("CallRpcxForTrans plat:%d, %s.%s.%d, Sess:%+v failed:%s", platId, sname, fname, svrid, sess, err.Error())
+		return rsp, errs
+	}
+	err := jsoniter.Unmarshal(rspBuf.Data, rsp)
+	if err != nil {
+		errs = errorMsg.RspError.Copy(err)
+		logs.Errorf("CallRpcxForTrans  plat:%d,%s.%s.%d Unmarshal rsp (%+v),rsp(%+v) failed:%s", platId, sname, fname, svrid, string(rspBuf.Data), string(rspBuf.Data), err.Error())
+	}
+	return rsp, errs
+}
+
+func CallRpcx(platId int32, uid uint64, sname, fname string, svrid int32, req interface{}, timeout time.Duration) (*NatsMsg, *errorMsg.ErrRsp) {
+	rsp := &NatsMsg{}
+	rspBuf, errs := rpcxCall(uid, platId, sname, fname, svrid, req, timeout, true)
+	if errs != nil {
+		//logs.Errorf("CallRpcx  plat:%d,%s.%s.%d  failed:%s", platId, sname, fname, svrid, err.Error())
+		return rsp, errs
+	}
+	err := jsoniter.Unmarshal(rspBuf.Data, rsp)
+	if err != nil {
+		errs = errorMsg.RspError.Copy(err)
+		logs.Errorf("CallRpcx  plat:%d,%s.%s.%d Unmarshal rsp (%+v) failed:%s", platId, sname, fname, svrid, string(rspBuf.Data), err.Error())
+	}
+	return rsp, errs
+}
+
+func SendRpcx(uid uint64, platId int32, sname, fname string, svrid int32, req interface{}) *errorMsg.ErrRsp {
+
+	if svrid <= -999 {
+		err := BroadcastRpcx(uid, platId, sname, fname, req)
+		if err != nil {
+			// logs.Errorf("SendRpcx  plat:%d,%s.%s.%d failed:%s", platId, sname, fname, svrid, err.Error())
+			return err
+		}
+	} else {
+		_, err := rpcxCall(uid, platId, sname, fname, svrid, req, GetRpcCallTimeout(), false)
+		if err != nil {
+			// logs.Errorf("SendRpcx  plat:%d,%s.%s.%d failed:%s", platId, sname, fname, svrid, err.Error())
+			return err
+		}
+	}
+
 	return nil
 }
 

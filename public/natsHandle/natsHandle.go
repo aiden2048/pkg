@@ -131,6 +131,7 @@ func Request[T any, H any](group, funcName string, req_param *T, needRsp bool, p
 		svrId = pids[2]
 	}
 	req := frame.NatsMsg{Sess: *frame.NewSessionOnly()}
+	req.Sess.PlatId = platId
 
 	req.MsgBody.Func = funcName
 	var err error
@@ -193,6 +194,7 @@ func RequestWithSess[T any, H any](sess *frame.Session, group, funcName string, 
 	} else {
 		req.Sess = *frame.NewSessionOnly()
 	}
+	req.Sess.PlatId = platId
 
 	req.MsgBody.Func = funcName
 	var err error

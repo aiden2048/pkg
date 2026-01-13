@@ -136,11 +136,13 @@ func InitConfig(svrName string, opt ...*FrameOption) error {
 
 	sleepTime := time.Millisecond * 20
 	os := runtime.GOOS
+	logDir := ""
 	if os == "windows" || os == "darwin" {
-		logs.InitServer(server_config.ServerName, server_config.ServerID, "../logs/", IsTestServer(), ReportLog, ReportBillStat)
+		logDir = fmt.Sprintf("../logs/%d/", GetPlatformId())
 	} else {
-		logs.InitServer(server_config.ServerName, server_config.ServerID, "/data/logs/", IsTestServer(), ReportLog, ReportBillStat)
+		logDir = fmt.Sprintf("/data/logs/%d/", GetPlatformId())
 	}
+	logs.InitServer(server_config.ServerName, server_config.ServerID, logDir, IsTestServer(), ReportLog, ReportBillStat)
 	// 根据bin目录下touch文件, 在reload的时候检查各个状态
 	baselib.RegisterReloadFunc(CheckSysStatus)
 	// 加载启动配置
