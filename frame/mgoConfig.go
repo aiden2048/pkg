@@ -122,7 +122,7 @@ func LoadMgoConfig(plat_id int32) error {
 		DecodeConf(&newConf.Log)
 	}
 	mgo_configs.Store(plat_id, newConf)
-	logs.Print("Load MongoConfig", plat_id, "成功:", newConf)
+	logs.Print("Load MongoConfig", plat_id, filename, "成功:", newConf)
 	return nil
 }
 
