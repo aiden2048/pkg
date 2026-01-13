@@ -33,10 +33,10 @@ func GetMysqlConfig() *MysqlCfg {
 	return mysql_config
 }
 
-func LoadMysqlConfig() error {
+func LoadMysqlConfig(plat_id int32) error {
 	new_cfg := &MysqlCfg{}
 	fkey := "MysqlConfig.toml"
-	configPath := GetGlobalConfigDir() + fkey
+	configPath := GetGlobalConfigDir(plat_id) + fkey
 	if _, err := os.Stat(configPath); err != nil {
 		logs.Errorf("Load configPath: %+v", err)
 		return err

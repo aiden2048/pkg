@@ -3,6 +3,7 @@ package frame
 import (
 	"fmt"
 	"os"
+	"sync"
 
 	"github.com/aiden2048/pkg/frame/logs"
 
@@ -49,14 +50,28 @@ type MgoCfg struct {
 	Log             MgoSvrCfg // log库
 }
 
-var mgo_config = &MgoCfg{}
+var mgo_configs = &sync.Map{}
 
-func GetMgoCoinfig() *MgoCfg {
-	return mgo_config
+func GetMgoCoinfig(plat_id int32) *MgoCfg {
+	if val, ok := mgo_configs.Load(plat_id); ok {
+		if cfg, ok := val.(*MgoCfg); ok {
+			return cfg
+		}
+	}
+	LoadMgoConfig(plat_id)
+	if val, ok := mgo_configs.Load(plat_id); ok {
+		if cfg, ok := val.(*MgoCfg); ok {
+			return cfg
+		}
+	}
+	return nil
 }
-
-func GetMongoRealConnUrl() string {
+func GetMongoRealConnUrl(plat_id int32) string {
 	add := ""
+	mgo_config := GetMgoCoinfig(plat_id)
+	if mgo_config == nil {
+		return ""
+	}
 	for id, url := range mgo_config.Real.Url {
 		if id == 0 {
 			add = url
@@ -71,11 +86,11 @@ func GetMongoRealConnUrl() string {
 	return url
 }
 
-func LoadMgoConfig() error {
+func LoadMgoConfig(plat_id int32) error {
 	newConf := &MgoCfg{}
 
 	fkey := "MgoConfig.toml"
-	filename := GetGlobalConfigDir() + fkey
+	filename := GetGlobalConfigDir(plat_id) + fkey
 	_, err := toml.DecodeFile(filename, newConf)
 	if err != nil {
 		if !os.IsNotExist(err) {
@@ -102,8 +117,8 @@ func LoadMgoConfig() error {
 		DecodeConf(&newConf.Top)
 		DecodeConf(&newConf.Log)
 	}
-	mgo_config = newConf
-	logs.Print("Load MongoConfig", mgo_config)
+	mgo_configs.Store(plat_id, newConf)
+	logs.Print("Load MongoConfig", plat_id, "成功:", newConf)
 	return nil
 }
 

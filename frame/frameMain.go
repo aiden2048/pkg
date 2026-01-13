@@ -28,7 +28,7 @@ var g_deferFuncs []func()
 
 var _debug_mode = false
 var _dev_mode = false
-var _Plat_id = 0
+var _Plat_id = int32(0)
 var once = &sync.Once{}
 
 type FrameOption struct {
@@ -58,9 +58,11 @@ func init() {
 	_dev_mode = console.OptBoolDefault("dev", false)
 
 	if v := os.Getenv("PLAT_ID"); v != "" {
-		_Plat_id, _ = strconv.Atoi(v)
+		if val, err := strconv.ParseInt(v, 10, 32); err == nil {
+			_Plat_id = int32(val)
+		}
 	} else {
-		_Plat_id = console.OptIntDefault("plat", 0)
+		_Plat_id = int32(console.OptIntDefault("plat", 0))
 	}
 	fmt.Println("启动分组:", _Plat_id)
 	fmt.Printf("_Plat_id = %d, _debug_mode = %t, _dev_mode:%t", _Plat_id, _debug_mode, _dev_mode)
@@ -69,10 +71,8 @@ func init() {
 func IsTestServer() bool {
 	return _global_config.IsTestServer
 }
-func GetGlobalConfigDir() string {
-	if _Plat_id == 0 {
-		return "../GlobalConfig/"
-	}
+func GetGlobalConfigDir(plat_id int32) string {
+
 	return fmt.Sprintf("../GlobalConfig/%d/", _Plat_id)
 }
 func IsDebug() bool {

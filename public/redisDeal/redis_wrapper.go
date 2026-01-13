@@ -43,7 +43,7 @@ func init() {
 }
 
 func loadConfig() error {
-	err, b := frame.LoadRedisConfig()
+	err, b := frame.LoadRedisConfig(frame.GetPlatformId())
 	if err != nil {
 		return err
 	}

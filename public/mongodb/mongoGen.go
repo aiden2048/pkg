@@ -43,14 +43,15 @@ type IndexS struct {
 	Keys     []string
 }
 type Mon struct {
-	dbKey     int8
-	cache     bool
-	indexKey  []string
-	expireKey []string
-	uindexKey []string
-	db        string
-	tb        string
-	Indexs    []*IndexS
+	platformId int32
+	dbKey      int8
+	cache      bool
+	indexKey   []string
+	expireKey  []string
+	uindexKey  []string
+	db         string
+	tb         string
+	Indexs     []*IndexS
 }
 type oid struct {
 	ID primitive.ObjectID `bson:"_id"`
@@ -58,13 +59,14 @@ type oid struct {
 
 func NewMon(db, tb string, cache bool, index, uindex, expire []string, dbKey ...int8) *Mon {
 	conn := &Mon{
-		db:        db,
-		tb:        tb,
-		dbKey:     DefaultKey, // 默认运行从库
-		cache:     cache,
-		indexKey:  index,
-		uindexKey: uindex,
-		expireKey: expire,
+		db:         db,
+		tb:         tb,
+		dbKey:      DefaultKey,            // 默认运行从库
+		platformId: frame.GetPlatformId(), // 默认当前分组
+		cache:      cache,
+		indexKey:   index,
+		uindexKey:  uindex,
+		expireKey:  expire,
 	}
 	if len(dbKey) > 0 {
 		conn.dbKey = dbKey[0]
@@ -75,6 +77,9 @@ func NewMon(db, tb string, cache bool, index, uindex, expire []string, dbKey ...
 
 func (m *Mon) SetDbKey(key int8) {
 	m.dbKey = key
+}
+func (m *Mon) SetPlatformId(platId int32) {
+	m.platformId = platId
 }
 func (m *Mon) SetDB(db string) {
 	m.db = db
@@ -89,7 +94,7 @@ func (m *Mon) GetTB() string {
 	return m.tb
 }
 func (m *Mon) GetColl() *mongo.Collection {
-	DB := getDbSession(m.dbKey)
+	DB := getDbSession(m.dbKey, m.platformId)
 	return DB.Database(m.db).Collection(m.tb)
 }
 func (m *Mon) ExpireKey(keys []string) {
@@ -108,7 +113,7 @@ func (m *Mon) IgnoreConflictInsertOne(ctx context.Context, data any) (err error)
 			logs.Warnf("IgnoreConflictInsertOne,db:%s,tb:%s,data:%+v,执行时间 > %d ms,cost:%+v,err:%+v", m.db, m.tb, data, maxQryTimeout.Milliseconds(), time.Now().Sub(start), err)
 		}
 	}()
-	DB := getDbSession(m.dbKey)
+	DB := getDbSession(m.dbKey, m.platformId)
 	_, err = DB.Database(m.db).Collection(m.tb).InsertOne(ctx, data)
 	ret := 0
 	if errors.Is(err, context.DeadlineExceeded) {
@@ -138,7 +143,7 @@ func (m *Mon) InsertOne(ctx context.Context, data any) (err error) {
 			logs.Warnf("InsertOne,db:%s,tb:%s,data:%+v,执行时间 > %d ms,cost:%+v,err:%+v", m.db, m.tb, data, maxQryTimeout.Milliseconds(), time.Now().Sub(start), err)
 		}
 	}()
-	DB := getDbSession(m.dbKey)
+	DB := getDbSession(m.dbKey, m.platformId)
 	_, err = DB.Database(m.db).Collection(m.tb).InsertOne(ctx, data)
 	ret := 0
 	if err == context.DeadlineExceeded {
@@ -170,7 +175,7 @@ func (m *Mon) InsertMany(ctx context.Context, data []any) (err error) {
 			logs.Warnf("InsertMany,db:%s,tb:%s,data:%+v,执行时间 > %d ms,cost:%+v,err:%+v", m.db, m.tb, data, maxQryTimeout.Milliseconds(), time.Now().Sub(start), err)
 		}
 	}()
-	DB := getDbSession(m.dbKey)
+	DB := getDbSession(m.dbKey, m.platformId)
 	_, err = DB.Database(m.db).Collection(m.tb).InsertMany(ctx, data)
 	ret := 0
 	if err == context.DeadlineExceeded {
@@ -192,7 +197,7 @@ func (m *Mon) UpdateOne(ctx context.Context, filter, update any) (err error) {
 		}
 	}()
 	go m.RecordMongoQuery(filter, false)
-	DB := getDbSession(m.dbKey)
+	DB := getDbSession(m.dbKey, m.platformId)
 	// update["updated_at"] = time.Now()
 	_, err = DB.Database(m.db).Collection(m.tb).UpdateOne(ctx, filter, update)
 	ret := 0
@@ -218,7 +223,7 @@ func (m *Mon) UpdateMany(ctx context.Context, filter, update any) (err error) {
 		}
 	}()
 	go m.RecordMongoQuery(filter, false)
-	DB := getDbSession(m.dbKey)
+	DB := getDbSession(m.dbKey, m.platformId)
 	// update["updated_at"] = time.Now()
 	_, err = DB.Database(m.db).Collection(m.tb).UpdateMany(ctx, filter, update)
 
@@ -248,7 +253,7 @@ func (m *Mon) UpSertWithRes(ctx context.Context, filter, update any) (res *mongo
 			logs.Warnf("UpSertWithRes,db:%s,tb:%s,filter:%+v,data:%+v,执行时间 > %d ms,cost:%+v,err:%+v", m.db, m.tb, filter, update, maxQryTimeout.Milliseconds(), time.Now().Sub(start), err)
 		}
 	}()
-	DB := getDbSession(m.dbKey)
+	DB := getDbSession(m.dbKey, m.platformId)
 	opts := options.Update().SetUpsert(true)
 	// update["updated_at"] = time.Now()
 	res, err = DB.Database(m.db).Collection(m.tb).UpdateOne(ctx, filter, update, opts)
@@ -278,7 +283,7 @@ func (m *Mon) UpSert(ctx context.Context, filter, update any) (err error) {
 			logs.Warnf("UpSert,db:%s,tb:%s,filter:%+v,data:%+v,执行时间 > %d ms,cost:%+v,err:%+v", m.db, m.tb, filter, update, maxQryTimeout.Milliseconds(), time.Now().Sub(start), err)
 		}
 	}()
-	DB := getDbSession(m.dbKey)
+	DB := getDbSession(m.dbKey, m.platformId)
 	opts := options.Update().SetUpsert(true)
 	// update["updated_at"] = time.Now()
 	_, err = DB.Database(m.db).Collection(m.tb).UpdateOne(ctx, filter, update, opts)
@@ -305,7 +310,7 @@ func (m *Mon) DeleteOne(ctx context.Context, filter any) (err error) {
 			logs.Warnf("DeleteOne,db:%s,tb:%s,filter:%+v,执行时间 > %d ms,cost:%+v,err:%+v", m.db, m.tb, filter, maxQryTimeout.Milliseconds(), time.Now().Sub(start), err)
 		}
 	}()
-	DB := getDbSession(m.dbKey)
+	DB := getDbSession(m.dbKey, m.platformId)
 	_, err = DB.Database(m.db).Collection(m.tb).DeleteOne(ctx, filter)
 	ret := 0
 	if err == context.DeadlineExceeded {
@@ -340,7 +345,7 @@ func (m *Mon) DeleteMany(ctx context.Context, filter any) (err error) {
 			logs.Warnf("DeleteMany,db:%s,tb:%s,filter:%+v,执行时间 > %d ms,cost:%+v,err:%+v", m.db, m.tb, filter, maxQryTimeout.Milliseconds(), time.Now().Sub(start), err)
 		}
 	}()
-	DB := getDbSession(m.dbKey)
+	DB := getDbSession(m.dbKey, m.platformId)
 	_, err = DB.Database(m.db).Collection(m.tb).DeleteMany(ctx, filter)
 	ret := 0
 	if err == context.DeadlineExceeded {
@@ -365,7 +370,7 @@ func (m *Mon) FindOne(ctx context.Context, filter any, rsp any) (err error) {
 		}
 	}()
 	go m.RecordMongoQuery(filter, false)
-	DB := getDbSession(m.dbKey)
+	DB := getDbSession(m.dbKey, m.platformId)
 	if DB == nil {
 		err = errors.New("dbconnet is nil")
 		return
@@ -390,7 +395,7 @@ func (m *Mon) FindOneByCacheKey(ctx context.Context, filter bson.M, ckey string,
 			logs.Warnf("FindOneByCacheKey,db:%s,tb:%s,filter:%+v,执行时间 > %d ms,cost:%+v,err:%+v", m.db, m.tb, filter, maxQryTimeout.Milliseconds(), time.Now().Sub(start), err)
 		}
 	}()
-	DB := getDbSession(m.dbKey)
+	DB := getDbSession(m.dbKey, m.platformId)
 	if DB == nil {
 		err = errors.New("dbconnet is nil")
 		return
@@ -442,7 +447,7 @@ func (m *Mon) FindOneByID(ctx context.Context, id string, rsp any) (err error) {
 			logs.Warnf("FindOneByIDdb:%s,tb:%s,id:%+v,执行时间 > %d ms,cost:%+v,err:%+v", m.db, m.tb, id, maxQryTimeout.Milliseconds(), time.Now().Sub(start), err)
 		}
 	}()
-	DB := getDbSession(m.dbKey)
+	DB := getDbSession(m.dbKey, m.platformId)
 	oid, err := primitive.ObjectIDFromHex(id)
 	defer func() {
 		ret := 0
@@ -469,7 +474,7 @@ func (m *Mon) FindAllV1(ctx context.Context, filter any, selector ...interface{}
 		}
 	}()
 	go m.RecordMongoQuery(filter, true)
-	DB := getDbSession(m.dbKey)
+	DB := getDbSession(m.dbKey, m.platformId)
 	opts := options.Find()
 	if len(selector) > 0 {
 		opts.SetProjection(selector[0])
@@ -496,7 +501,7 @@ func (m *Mon) FindAllBySortV1(ctx context.Context, filter any, sort bson.D, sele
 		}
 	}()
 	go m.RecordMongoQuery(filter, false)
-	DB := getDbSession(m.dbKey)
+	DB := getDbSession(m.dbKey, m.platformId)
 	opts := options.Find()
 	if sort != nil {
 		opts.SetSort(sort)
@@ -527,7 +532,7 @@ func (m *Mon) FindManyV1(ctx context.Context, filter any, sort bson.D, limit int
 		}
 	}()
 	go m.RecordMongoQuery(filter, false)
-	DB := getDbSession(m.dbKey)
+	DB := getDbSession(m.dbKey, m.platformId)
 	opts := options.Find()
 	if sort != nil {
 		opts.SetSort(sort)
@@ -559,7 +564,7 @@ func (m *Mon) FindManyByPageV1(ctx context.Context, filter any, sort bson.D, off
 		}
 	}()
 	go m.RecordMongoQuery(filter, false)
-	DB := getDbSession(m.dbKey)
+	DB := getDbSession(m.dbKey, m.platformId)
 	opts := options.Find()
 	if sort != nil {
 		opts.SetSort(sort)
@@ -598,7 +603,7 @@ func (m *Mon) FindCount(ctx context.Context, filter any) (id int64, err error) {
 		stat.ReportStat("rp:mongo.FindCount."+m.db+"."+m.tb, ret, time.Now().Sub(start))
 	}()
 
-	DB := getDbSession(m.dbKey)
+	DB := getDbSession(m.dbKey, m.platformId)
 	return DB.Database(m.db).Collection(m.tb).CountDocuments(ctx, filter)
 }
 func (m *Mon) Aggregate(ctx context.Context, pipe []bson.D, opts ...*options.AggregateOptions) (ret []bson.M, err error) {
@@ -611,7 +616,7 @@ func (m *Mon) Aggregate(ctx context.Context, pipe []bson.D, opts ...*options.Agg
 	}()
 	go m.RecordMongoQuery(pipe, true)
 
-	DB := getDbSession(m.dbKey)
+	DB := getDbSession(m.dbKey, m.platformId)
 	curs, _err := DB.Database(m.db).Collection(m.tb).Aggregate(ctx, pipe, opts...)
 	if _err != nil {
 		err = _err
@@ -635,7 +640,7 @@ func (m *Mon) Aggregate(ctx context.Context, pipe []bson.D, opts ...*options.Agg
 	return ret, nil
 }
 func (m *Mon) Trans(ctx context.Context, fn func(mongo.SessionContext) error) (err error) {
-	DB := getDbSession(m.dbKey)
+	DB := getDbSession(m.dbKey, m.platformId)
 	err = DB.UseSession(ctx, func(sc mongo.SessionContext) error {
 		var err error
 		err = sc.StartTransaction()
@@ -663,7 +668,8 @@ func (m *Mon) clearIndexs(ctx context.Context, keys []string) {
 	if m.db == "global_provider_game" {
 		return
 	}
-	cursor, err := db.Database(m.db).Collection(m.tb).Indexes().List(ctx)
+	DB := getDbSession(m.dbKey, m.platformId)
+	cursor, err := DB.Database(m.db).Collection(m.tb).Indexes().List(ctx)
 	if err != nil {
 		logs.PrintError("获取索引失败", m.db, m.tb)
 		return
@@ -707,7 +713,7 @@ func (m *Mon) clearIndexs(ctx context.Context, keys []string) {
 		}
 		if strings.HasPrefix(m.db, "mg_config") /*|| strings.HasPrefix(m.db, "mg_static")*/ {
 			logs.PrintError("+++ 准备删除老索引 +++", m.db, m.tb, kname, index)
-			db.Database(m.db).Collection(m.tb).Indexes().DropOne(ctx, kname, options.DropIndexes())
+			DB.Database(m.db).Collection(m.tb).Indexes().DropOne(ctx, kname, options.DropIndexes())
 		} else {
 			logs.PrintBill("建议删除老索引", m.db, m.tb, kname, index)
 
@@ -817,7 +823,7 @@ func (m *Mon) creatIndex(tctx ...context.Context) {
 	if len(allKey) == 0 {
 		return
 	}
-	DB := getDbSession(m.dbKey)
+	DB := getDbSession(m.dbKey, m.platformId)
 	_, err := DB.Database(m.db).Collection(m.tb).Indexes().CreateMany(ctx, models)
 	if err != nil {
 		if strings.HasPrefix(m.db, "mg_config") /*|| strings.HasPrefix(m.db, "mg_static")*/ {
@@ -889,7 +895,7 @@ func (m *Mon) CreatIndexByIndexKey(ctx context.Context, indexKey []string) {
 		model.Options = options.Index().SetBackground(true)
 		models = append(models, model)
 	}
-	DB := getDbSession(m.dbKey)
+	DB := getDbSession(m.dbKey, m.platformId)
 	_, err := DB.Database(m.db).Collection(m.tb).Indexes().CreateMany(ctx, models)
 	if err != nil {
 		logs.Errorf("创建索引失败,db:%s,tb:%s,err:%+v，index:%s", m.db, m.tb, err, indexKey)
@@ -900,7 +906,7 @@ func (m *Mon) CreatIndexByIndexKey(ctx context.Context, indexKey []string) {
 	}
 }
 func (m *Mon) DeleteIndex(ctx context.Context, indexName string) error {
-	DB := getDbSession(m.dbKey)
+	DB := getDbSession(m.dbKey, m.platformId)
 	_, err := DB.Database(m.db).Collection(m.tb).Indexes().DropOne(ctx, indexName)
 	return err
 }

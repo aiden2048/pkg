@@ -61,7 +61,7 @@ func GetStrServerID() string {
 }
 
 func GetPlatformId() int32 {
-	return int32(_Plat_id)
+	return _Plat_id
 }
 
 func GetCallTimeout() int32 {
@@ -118,13 +118,6 @@ func InitConfig(svrName string, opt ...*FrameOption) error {
 		runtime.GOMAXPROCS(cpun)
 	}
 
-	//platid
-	// if !defFrameOption.DisableRpcx || !defFrameOption.DisableNats {
-	// 	if err := LoadPlatConfig(); err != nil {
-	// 		return err
-	// 	}
-	// }
-
 	// 加载框架配置
 	server_config.ServerName = svrName
 	server_config.Port = defFrameOption.Port
@@ -147,10 +140,7 @@ func InitConfig(svrName string, opt ...*FrameOption) error {
 				//nPlatformId := int64(_global_config.PlatformID) * 10000
 				server_config.ServerID = int32(nPlatformId)
 			} else {
-				//nPlatformId := int64(_global_config.PlatformID) * 1000000
-				//if _global_config.PlatformID > 2000 {
-				//	nPlatformId = int64(_global_config.PlatformID/10+_global_config.PlatformID%100) * 1000000
-				//}
+
 				ip := baselib.GetLocalIP()
 				ips := strings.Split(ip, ".")
 				if len(ips) > 3 {
@@ -159,7 +149,6 @@ func InitConfig(svrName string, opt ...*FrameOption) error {
 				}
 				server_config.ServerID = int32(nPlatformId)
 			}
-
 		}
 
 	} else {
@@ -204,17 +193,11 @@ func InitConfig(svrName string, opt ...*FrameOption) error {
 		time.Sleep(sleepTime)
 		return err
 	}
-	baselib.RegisterReloadFunc(LoadGlobalConfig)
+	baselib.RegisterReloadFunc(LoadBootConfig)
 	baselib.RegisterReloadFunc(LoadFrameConfig)
 	logs.Infof("Init Server GOMAXPROCS:%d, NumCpu:%d", cpun, runtime.NumCPU())
 	logs.Infof("Init Server %+v, FrameConfig:%+v", server_config, config)
 
-	if err := LoadSystemConfig(); err != nil {
-		//等待一会, 让日志打印出去
-		time.Sleep(sleepTime)
-		return err
-	}
-	baselib.RegisterReloadFunc(LoadSystemConfig)
 	logs.SetServerId(GetServerID())
 
 	if err := StartLoadNatsServices(); err != nil {
@@ -249,47 +232,39 @@ func InitConfig(svrName string, opt ...*FrameOption) error {
 // }
 
 func LoadBootConfig() error {
-	// if !defFrameOption.DisableRpcx || !defFrameOption.DisableNats {
-	// 	if err := LoadPlatConfig(); err != nil {
-	// 		return err
-	// 	}
-	// }
+
 	if defFrameOption.EnableMysql {
-		err := LoadMysqlConfig()
+		err := LoadMysqlConfig(_Plat_id)
 		if err != nil {
 			return err
 		}
 		logs.Infof("connect to Mysql")
 	}
 	if !defFrameOption.DisableMgo {
-		err := LoadMgoConfig()
+		err := LoadMgoConfig(_Plat_id)
 		if err != nil {
 			return err
 		}
 		logs.Infof("connect to Mgo")
 	}
-	//plat := _global_config.PlatformID
-	//mix := _global_config.EnableMixServer
-	//isTest := _global_config.IsTestServer
-	if err := LoadGlobalConfig(); err != nil {
+	if err := LoadGlobalConfig(_Plat_id); err != nil {
 		return err
 	}
-
-	//err = LoadNatsConfig()
-	//if err != nil {
-	//	return err
-	//}
+	logs.Infof("Read Globalconfig Config:%+v", _global_config)
+	if err := LoadNatsConfig(_Plat_id); err != nil {
+		return err
+	}
+	logs.Infof("Read Nats Config:%+v", natsConfig)
+	if err := LoadEtcdConfig(_Plat_id); err != nil {
+		return err
+	}
+	logs.Infof("Read Etcd Config:%+v", etcdConfig)
 
 	return nil
 }
 
 func LoadFrameConfig() error {
-	if !defFrameOption.DisableRpcx {
-		if err := LoadEtcdConfig(); err != nil {
-			return err
-		}
-	}
-	logs.Infof("Read Etcd Config:%+v", etcdConfig)
+
 	newConf := NewDefaultFrameConfig()
 	//logs.Infof("Load Config:%+v from: %s", newConf, filename)
 	if newConf.RpcCallTimeout <= 0 {
@@ -306,19 +281,6 @@ func LoadFrameConfig() error {
 	LoadLogConfig(config.LogConf)
 
 	share.Trace = config.LogConf.LogRpcx
-	return nil
-}
-
-func LoadSystemConfig() error {
-
-	// 不开启 nats
-	if !defFrameOption.DisableNats {
-		if err := LoadNatsConfig(); err != nil {
-			return err
-		}
-	}
-	logs.Infof("Read Nats Config:%+v", natsConfig)
-
 	return nil
 }
 

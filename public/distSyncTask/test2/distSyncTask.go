@@ -23,7 +23,7 @@ func main() {
 
 	// 初始化mongo
 	if err := mongodb.StartMgoDb(mongodb.WLevel2); err != nil {
-		log.Fatalf("InitMongodb %+v failed: %s", frame.GetMgoCoinfig(), err.Error())
+		log.Fatalf("InitMongodb %+v failed: %s", frame.GetMgoCoinfig(frame.GetPlatformId()), err.Error())
 		return
 	}
 	// 初始化REDIS

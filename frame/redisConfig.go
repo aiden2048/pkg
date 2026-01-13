@@ -44,12 +44,12 @@ func (cfg *RedisCfg) GetRedisNode(sec string) *RedisSectionConfig {
 	return redisSec
 }
 
-func LoadRedisConfig() (error, map[string]bool) {
+func LoadRedisConfig(plat_id int32) (error, map[string]bool) {
 	bret := make(map[string]bool)
 
 	newConf := &RedisCfg{}
 	fkey := "RedisConfig.toml"
-	filename := GetGlobalConfigDir() + fkey
+	filename := GetGlobalConfigDir(plat_id) + fkey
 	_, err := toml.DecodeFile(filename, newConf)
 	if err != nil {
 		if !os.IsNotExist(err) {

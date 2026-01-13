@@ -19,7 +19,7 @@ func main() {
 
 	// 初始化mongo
 	if err := mongodb.StartMgoDb(mongodb.WLevel1); err != nil {
-		fmt.Printf("InitMongodb %+v failed\n: %s", frame.GetMgoCoinfig(), err.Error())
+		fmt.Printf("InitMongodb %+v failed\n: %s", frame.GetMgoCoinfig(frame.GetPlatformId()), err.Error())
 		return
 	}
 

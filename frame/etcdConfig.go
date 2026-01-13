@@ -53,11 +53,11 @@ func GetEtcdConfig() *EtcdConfig {
 	return etcdConfig
 }
 
-func LoadEtcdConfig() error {
+func LoadEtcdConfig(plat_id int32) error {
 	newConf := &EtcdConfig{}
 
 	fkey := "EtcdConfig.toml"
-	filename := GetGlobalConfigDir() + fkey
+	filename := GetGlobalConfigDir(plat_id) + fkey
 	_, err := toml.DecodeFile(filename, newConf)
 	if err != nil {
 		if !os.IsNotExist(err) {

@@ -22,10 +22,10 @@ func GetGlobalConfig() *TGlobalConfig {
 	return _global_config
 }
 
-func LoadGlobalConfig() error {
+func LoadGlobalConfig(plat_id int32) error {
 	newConf := &TGlobalConfig{}
 	fkey := "GlobalConfig.toml"
-	filename := GetGlobalConfigDir() + fkey
+	filename := GetGlobalConfigDir(plat_id) + fkey
 	_, err := toml.DecodeFile(filename, newConf)
 	if err != nil {
 		if !os.IsNotExist(err) {
