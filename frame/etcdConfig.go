@@ -87,7 +87,7 @@ func LoadEtcdConfig(plat_id int32) error {
 			logs.Print("MapCenterEtcdAddrs Etcd", k, "这是其他通服组etcd, 不需要连")
 			continue
 		}
-		if !GetFrameOption().EnableAllAreaMix && GetPlatformId() >= 1000 && GetPlatformId()/10000 != k.PlatId/10000 {
+		if !GetFrameOption().EnableAllAreaMix && GetPlatformId() >= 1000 && GetPlatformId()/1000 != k.PlatId/1000 {
 			logs.Print("MapCenterEtcdAddrs Etcd", k, "跟本组不通服, 不加入到通服配置")
 			continue
 		}
