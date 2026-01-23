@@ -23,12 +23,14 @@ require (
 	go.etcd.io/etcd/client/pkg/v3 v3.6.1
 	go.mongodb.org/mongo-driver v1.17.4
 	golang.org/x/exp/errors v0.0.0-20250620022241-b7579e27df2b
-	golang.org/x/sync v0.16.0
-	golang.org/x/text v0.27.0
+	golang.org/x/sync v0.19.0
+	golang.org/x/text v0.32.0
 )
 
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect
+	github.com/ClickHouse/ch-go v0.69.0 // indirect
+	github.com/ClickHouse/clickhouse-go/v2 v2.42.0 // indirect
 	github.com/akutz/memconn v0.1.0 // indirect
 	github.com/andybalholm/brotli v1.2.0 // indirect
 	github.com/apache/thrift v0.21.0 // indirect
@@ -42,6 +44,8 @@ require (
 	github.com/edwingeng/doublejump v1.0.1 // indirect
 	github.com/facebookgo/clock v0.0.0-20150410010913-600d898af40a // indirect
 	github.com/fatih/color v1.18.0 // indirect
+	github.com/go-faster/city v1.0.1 // indirect
+	github.com/go-faster/errors v0.7.1 // indirect
 	github.com/go-ping/ping v1.2.0 // indirect
 	github.com/go-task/slim-sprig/v3 v3.0.0 // indirect
 	github.com/godzie44/go-uring v0.0.0-20220926161041-69611e8b13d5 // indirect
@@ -70,11 +74,14 @@ require (
 	github.com/nats-io/nkeys v0.4.11 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
 	github.com/onsi/ginkgo/v2 v2.22.2 // indirect
+	github.com/paulmach/orb v0.12.0 // indirect
 	github.com/philhofer/fwd v1.1.3-0.20240916144458-20a13a1f6b7c // indirect
+	github.com/pierrec/lz4/v4 v4.1.22 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/quic-go/quic-go v0.49.0 // indirect
 	github.com/rs/cors v1.11.1 // indirect
 	github.com/rubyist/circuitbreaker v2.2.1+incompatible // indirect
+	github.com/segmentio/asm v1.2.1 // indirect
 	github.com/smallnest/quick v0.2.0 // indirect
 	github.com/smallnest/rsocket v0.0.0-20241130031020-4a72eb6ff62a // indirect
 	github.com/soheilhy/cmux v0.1.5 // indirect
@@ -94,15 +101,18 @@ require (
 	go.etcd.io/etcd/api/v3 v3.5.1 // indirect
 	go.etcd.io/etcd/client/v2 v2.305.1 // indirect
 	go.etcd.io/etcd/client/v3 v3.5.1 // indirect
+	go.opentelemetry.io/otel v1.39.0 // indirect
+	go.opentelemetry.io/otel/trace v1.39.0 // indirect
 	go.uber.org/mock v0.5.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
-	golang.org/x/crypto v0.39.0 // indirect
+	go.yaml.in/yaml/v3 v3.0.4 // indirect
+	golang.org/x/crypto v0.46.0 // indirect
 	golang.org/x/exp v0.0.0-20250128144449-3edf0e91c1ae // indirect
-	golang.org/x/mod v0.25.0 // indirect
-	golang.org/x/net v0.41.0 // indirect
-	golang.org/x/sys v0.33.0 // indirect
-	golang.org/x/tools v0.34.0 // indirect
+	golang.org/x/mod v0.30.0 // indirect
+	golang.org/x/net v0.48.0 // indirect
+	golang.org/x/sys v0.39.0 // indirect
+	golang.org/x/tools v0.39.0 // indirect
 	google.golang.org/genproto v0.0.0-20210602131652-f16073e35f0c // indirect
 	google.golang.org/grpc v1.65.0 // indirect
 	google.golang.org/protobuf v1.36.4 // indirect
