@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/aiden2048/pkg/frame/logs"
-	"github.com/rcrowley/go-metrics"
 	"github.com/rpcxio/rpcx-etcd/serverplugin"
 	"github.com/smallnest/rpcx/server"
 )
@@ -56,7 +55,7 @@ func addEtcdV3RgistryPlugin(serv *server.Server) error {
 				ServiceAddress: "tcp@" + address,
 				EtcdServers:    centerEtcdAddr,
 				BasePath:       GetRegistEtcdBasePathV3(GetServerName()),
-				Metrics:        metrics.NewRegistry(),
+				Metrics:        nil,
 				Services:       nil,
 				UpdateInterval: time.Second * time.Duration(GetEtcdConfig().UpdateTime),
 				//	Options:        &store.Config{ConnectionTimeout: 3 * time.Second},
@@ -101,7 +100,7 @@ func addEtcdV3RgistryPlugin(serv *server.Server) error {
 				ServiceAddress: "tcp@" + address,
 				EtcdServers:    addr.EtcdAddr,
 				BasePath:       GetRegistEtcdBasePathV3(GetServerName()),
-				Metrics:        metrics.NewRegistry(),
+				Metrics:        nil,
 				Services:       nil,
 				UpdateInterval: time.Second * time.Duration(GetEtcdConfig().UpdateTime),
 				//	Options:        &store.Config{ConnectionTimeout: 3 * time.Second},
