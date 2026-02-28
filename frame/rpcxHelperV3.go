@@ -10,12 +10,12 @@ import (
 	"time"
 
 	"github.com/aiden2048/pkg/frame/logs"
-	"github.com/rpcxio/rpcx-etcd/serverplugin"
 	"github.com/smallnest/rpcx/server"
 )
 
 // rpcx etcdV3注册
-var registryPluginV3 []*serverplugin.EtcdV3RegisterPlugin
+// var registryPluginV3 []*serverplugin.EtcdV3RegisterPlugin
+var registryPluginV3 []*CustomEtcdV3RegisterPlugin
 
 var rpcxV3Started bool
 var listenerV3 net.Listener
@@ -51,14 +51,12 @@ func addEtcdV3RgistryPlugin(serv *server.Server) error {
 		addrs := strings.Join(centerEtcdAddr, ",")
 		_, ok := allPlatsV3.Load(addrs)
 		if !ok && len(centerEtcdAddr) > 0 {
-			plugin := &serverplugin.EtcdV3RegisterPlugin{
+			plugin := &CustomEtcdV3RegisterPlugin{
 				ServiceAddress: "tcp@" + address,
 				EtcdServers:    centerEtcdAddr,
 				BasePath:       GetRegistEtcdBasePathV3(GetServerName()),
 				Metrics:        nil,
-				Services:       nil,
 				UpdateInterval: time.Second * time.Duration(GetEtcdConfig().UpdateTime),
-				//	Options:        &store.Config{ConnectionTimeout: 3 * time.Second},
 			}
 
 			err := plugin.Start()
@@ -96,14 +94,12 @@ func addEtcdV3RgistryPlugin(serv *server.Server) error {
 			}
 			allPlatsV3.Store(platAddrs, 1)
 
-			plugin := &serverplugin.EtcdV3RegisterPlugin{
+			plugin := &CustomEtcdV3RegisterPlugin{
 				ServiceAddress: "tcp@" + address,
 				EtcdServers:    addr.EtcdAddr,
 				BasePath:       GetRegistEtcdBasePathV3(GetServerName()),
 				Metrics:        nil,
-				Services:       nil,
 				UpdateInterval: time.Second * time.Duration(GetEtcdConfig().UpdateTime),
-				//	Options:        &store.Config{ConnectionTimeout: 3 * time.Second},
 			}
 
 			err := plugin.Start()

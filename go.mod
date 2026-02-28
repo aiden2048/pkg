@@ -4,6 +4,7 @@ go 1.24.5
 
 require (
 	github.com/BurntSushi/toml v1.5.0
+	github.com/ClickHouse/clickhouse-go/v2 v2.42.0
 	github.com/alitto/pond v1.9.2
 	github.com/go-playground/form/v4 v4.2.1
 	github.com/go-sql-driver/mysql v1.9.3
@@ -21,6 +22,7 @@ require (
 	github.com/smallnest/rpcx v1.9.1
 	github.com/valyala/fasthttp v1.63.0
 	go.etcd.io/etcd/client/pkg/v3 v3.6.1
+	go.etcd.io/etcd/client/v3 v3.5.1
 	go.mongodb.org/mongo-driver v1.17.4
 	golang.org/x/exp/errors v0.0.0-20250620022241-b7579e27df2b
 	golang.org/x/sync v0.19.0
@@ -30,7 +32,6 @@ require (
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/ClickHouse/ch-go v0.69.0 // indirect
-	github.com/ClickHouse/clickhouse-go/v2 v2.42.0 // indirect
 	github.com/akutz/memconn v0.1.0 // indirect
 	github.com/andybalholm/brotli v1.2.0 // indirect
 	github.com/apache/thrift v0.21.0 // indirect
@@ -100,7 +101,6 @@ require (
 	github.com/youmark/pkcs8 v0.0.0-20240726163527-a2c0da244d78 // indirect
 	go.etcd.io/etcd/api/v3 v3.5.1 // indirect
 	go.etcd.io/etcd/client/v2 v2.305.1 // indirect
-	go.etcd.io/etcd/client/v3 v3.5.1 // indirect
 	go.opentelemetry.io/otel v1.39.0 // indirect
 	go.opentelemetry.io/otel/trace v1.39.0 // indirect
 	go.uber.org/mock v0.5.0 // indirect
