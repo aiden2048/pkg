@@ -221,6 +221,11 @@ func stopRegistryPlugin() {
 	//}
 	pluginsV3 := registryPluginV3
 	registryPluginV3 = nil
+	// 清空地址缓存，确保 OnEtcdReload / 下次 addEtcdV3RgistryPlugin 能重新注册
+	allPlatsV3.Range(func(k, _ any) bool {
+		allPlatsV3.Delete(k)
+		return true
+	})
 	for _, pl := range pluginsV3 {
 		_ = pl.Stop()
 		logs.Importantf("Stop EtcdPluginV3, Address:%s Service:%+v, Server:%+v", pl.ServiceAddress, pl.Services, pl.EtcdServers)
