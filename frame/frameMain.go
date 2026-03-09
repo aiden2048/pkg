@@ -72,7 +72,9 @@ func IsTestServer() bool {
 	return _global_config.IsTestServer
 }
 func GetGlobalConfigDir(plat_id int32) string {
-
+	if plat_id == 0 {
+		return "../GlobalConfig/"
+	}
 	return fmt.Sprintf("../GlobalConfig/%d/", plat_id)
 }
 func IsDebug() bool {
