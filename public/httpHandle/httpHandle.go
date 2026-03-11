@@ -37,7 +37,11 @@ func HandleLogic[R any, T any](fastCtx *fasthttp.RequestCtx, msg *frame.NatsMsg,
 			return
 		}
 	} else {
-		_err := jsoniter.Unmarshal(fastCtx.Request.Body(), &req)
+		reqBytes := fastCtx.Request.Body()
+		if string(reqBytes) == "" {
+			reqBytes = []byte("{}")
+		}
+		_err := jsoniter.Unmarshal(reqBytes, &req)
 		if _err != nil {
 			err := errorMsg.ReqParamError.Return("GetParam")
 			fastCtx.SetStatusCode(fasthttp.StatusBadRequest)
