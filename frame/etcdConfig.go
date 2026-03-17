@@ -94,6 +94,9 @@ func LoadEtcdConfig(plat_id int32) error {
 		sort.Strings(k.EtcdAddr)
 		logs.Print("MapCenterEtcdAddrs 添加center Etcd配置", k)
 		newConf.MapCenterEtcdAddrs[k.PlatId] = k
+		if plat_id == 0 {
+			newConf.MapCenterEtcdAddrs[plat_id] = k
+		}
 	}
 
 	etcdConfig = newConf

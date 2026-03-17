@@ -104,7 +104,7 @@ func LoadNatsConfig(plat_id int32) error {
 		}
 
 		//newConf.mapNats[k.PlatId] = k
-		if k.PlatId == GetPlatformId() {
+		if k.PlatId == GetPlatformId() || GetPlatformId() == 0 {
 			newConf.NatsConfig = k
 			logs.Print("读取本组 Nats 配置", k)
 		}
