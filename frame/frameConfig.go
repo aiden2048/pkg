@@ -251,14 +251,18 @@ func LoadBootConfig() error {
 		return err
 	}
 	logs.Infof("Read Globalconfig Config:%+v", _global_config)
-	if err := LoadNatsConfig(_Plat_id); err != nil {
-		return err
+	if !defFrameOption.DisableNats {
+		if err := LoadNatsConfig(_Plat_id); err != nil {
+			return err
+		}
+		logs.Infof("Read Nats Config:%+v", natsConfig)
 	}
-	logs.Infof("Read Nats Config:%+v", natsConfig)
-	if err := LoadEtcdConfig(_Plat_id); err != nil {
-		return err
+	if !defFrameOption.DisablEtcd {
+		if err := LoadEtcdConfig(_Plat_id); err != nil {
+			return err
+		}
+		logs.Infof("Read Etcd Config:%+v", etcdConfig)
 	}
-	logs.Infof("Read Etcd Config:%+v", etcdConfig)
 
 	return nil
 }

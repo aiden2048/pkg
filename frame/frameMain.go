@@ -35,6 +35,7 @@ type FrameOption struct {
 	Port             int
 	Svrid            int  //-1000的时候,有系统根据服务器机器名编号
 	DisableNats      bool // 禁用 nats
+	DisablEtcd       bool // 禁用 etcd
 	DisableRpcx      bool //禁用rpcx
 	DisableMgo       bool //不启用Mgo
 	EnableMysql      bool //不启用mysql
